@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Test coverage
+coverage/
+
+# Temp / debug files
+debug-output.txt
+build.log
+final-test.log
+jest.log
+test-output.log
+final-wa-verification.js
+test-wa-axios.js
+
+# Data / script outputs
+cloudinary-assets.json
+url-mapping.json
+
+# Git
+.git/
