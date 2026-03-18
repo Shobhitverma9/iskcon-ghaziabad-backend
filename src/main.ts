@@ -8,8 +8,9 @@ import { json, urlencoded } from 'express';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
 
+  const corsOrigin = (process.env.CORS_ORIGIN || "http://localhost:3000").trim();
   app.enableCors({
-    origin: process.env.CORS_ORIGIN || "http://localhost:3000",
+    origin: corsOrigin,
     credentials: true,
   })
 
