@@ -46,13 +46,14 @@ steps:
       - '--max-instances'
       - '5'
       - '--set-env-vars'
-      - 'NODE_ENV=production,SITE_URL=https://iskconghaziabad.com'
+      - 'NODE_ENV=production,SITE_URL=https://iskconghaziabad.com,FRONTEND_URL=${_FRONTEND_URL}'
       - '--set-secrets'
       - 'MONGODB_URI=mongodb-uri:latest,JWT_SECRET=jwt-secret:latest,CORS_ORIGIN=cors-origin:latest,CLOUDINARY_CLOUD_NAME=cloudinary-cloud-name:latest,CLOUDINARY_API_KEY=cloudinary-api-key:latest,CLOUDINARY_API_SECRET=cloudinary-api-secret:latest,RAZORPAY_KEY_ID=razorpay-key-id:latest,RAZORPAY_KEY_SECRET=razorpay-key-secret:latest,RAZORPAY_WEBHOOK_SECRET=razorpay-webhook-secret:latest,POSTMARK_API_TOKEN=postmark-api-token:latest,POSTMARK_FROM_EMAIL=postmark-from-email:latest,GOOGLE_CLIENT_ID=google-client-id:latest,TIMESPANEL_API_KEY=timespanel-api-key:latest,TIMESPANEL_BASE_URL=timespanel-base-url:latest,TIMESPANEL_SENDER_NUMBER=timespanel-sender-number:latest'
 
 substitutions:
   _REGION: asia-south1
   _REPO: iskcon-ghaziabad
+  _FRONTEND_URL: https://iskcon-frontend-771969643892.asia-south1.run.app
 
 options:
   logging: CLOUD_LOGGING_ONLY
