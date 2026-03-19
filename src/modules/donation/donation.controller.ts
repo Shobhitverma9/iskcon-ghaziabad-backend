@@ -9,6 +9,8 @@ import { StorageService } from "../../shared/storage/storage.service"
 import { CreateDonationDto } from "./dto/create-donation.dto"
 import { CreateCategoryDto } from "./dto/create-category.dto"
 import { CreateItemDto } from "./dto/create-item.dto"
+import { UpdateCategoryDto } from "./dto/update-category.dto"
+import { UpdateItemDto } from "./dto/update-item.dto"
 
 @Controller("donations")
 export class DonationController {
@@ -26,7 +28,10 @@ export class DonationController {
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
   async uploadImage(@UploadedFile() file: Express.Multer.File) {
+    this.logger.log(`Upload request received. File: ${file ? file.originalname : 'MISSING'}, Size: ${file ? file.size : 'N/A'}`);
+    
     if (!file) {
+      this.logger.warn('No file received in uploadImage');
       throw new BadRequestException('No file uploaded');
     }
 
@@ -53,8 +58,8 @@ export class DonationController {
   // @UseGuards(JwtAuthGuard, RolesGuard)
   // @Roles('admin', 'volunteer')
   @Patch("categories/:id")
-  async updateCategory(@Param('id') id: string, @Body() body: any) {
-    return this.donationService.updateCategory(id, body)
+  async updateCategory(@Param('id') id: string, @Body() updateCategoryDto: UpdateCategoryDto) {
+    return this.donationService.updateCategory(id, updateCategoryDto)
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -81,8 +86,8 @@ export class DonationController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'volunteer')
   @Patch("items/:id")
-  async updateItem(@Param('id') id: string, @Body() body: any) {
-    return this.donationService.updateItem(id, body)
+  async updateItem(@Param('id') id: string, @Body() updateItemDto: UpdateItemDto) {
+    return this.donationService.updateItem(id, updateItemDto)
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

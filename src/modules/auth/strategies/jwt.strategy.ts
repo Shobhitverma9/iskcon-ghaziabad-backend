@@ -17,12 +17,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
             jwtFromRequest: ExtractJwt.fromExtractors([
                 // Extract from cookie first
                 (request: Request) => {
-                    if (request && request.cookies) {
-                        this.logger.log(`Cookies received: ${Object.keys(request.cookies).join(', ')}`);
-                        this.logger.log(`session_token present: ${!!request.cookies.session_token}`);
-                    } else {
-                        this.logger.log(`No cookies received on request to: ${request.url}`);
-                    }
                     return request?.cookies?.session_token;
                 },
                 // Fallback to Authorization header

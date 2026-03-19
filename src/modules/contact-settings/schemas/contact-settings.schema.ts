@@ -33,19 +33,19 @@ export class ContactSettings {
     @Prop({ default: "4:30 PM - 8:30 PM" })
     eveningTimings: string
 
-    @Prop({ default: "" })
+    @Prop({ default: "https://www.facebook.com/share/186TRRnouU/?mibextid=wwXIfr" })
     facebook: string
 
-    @Prop({ default: "" })
+    @Prop({ default: "https://www.instagram.com/iskconghaziabad?igsh=MXN5Y2VhYzhuOHV1bw%3D%3D&utm_source=qr" })
     instagram: string
 
-    @Prop({ default: "" })
+    @Prop({ default: "https://youtube.com/@iskconghaziabad?si=Ghu3rYl1qEdCxMrE" })
     youtube: string
 
     @Prop({ default: "" })
     twitter: string
 
-    @Prop({ default: "" })
+    @Prop({ default: "https://whatsapp.com/channel/0029VaSENPW9hXF2XPDG5e41" })
     whatsapp: string
 }
 

@@ -1,0 +1,475 @@
+{
+  "info": {
+    "name": "ISKCON Ghaziabad API",
+    "_postman_id": "iskcon-api-collection",
+    "description": "Complete API collection for ISKCON Ghaziabad backend. Set the `baseUrl` variable to your Cloud Run URL.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://iskcon-backend-771969643892.asia-south1.run.app",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string",
+      "description": "JWT token - set this after login"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.access_token) {",
+                  "  pm.collectionVariables.set('token', json.access_token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@iskconghaziabad.com\",\n  \"password\": \"your-password\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Google Login",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/google",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idToken\": \"GOOGLE_ID_TOKEN_HERE\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/auth/profile"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Banners",
+      "item": [
+        {
+          "name": "Get All Banners",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": "{{baseUrl}}/banners"
+          }
+        },
+        {
+          "name": "Get Banner by ID",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": "{{baseUrl}}/banners/BANNER_ID"
+          }
+        },
+        {
+          "name": "Create Banner (Admin)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/banners",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "title", "value": "Test Banner", "type": "text" },
+                { "key": "image", "type": "file", "src": [] }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Banner (Admin)",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/banners/BANNER_ID",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Banner\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Delete Banner (Admin)",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/banners/BANNER_ID"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Blog",
+      "item": [
+        {
+          "name": "Get All Blogs",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/blog?page=1&limit=10",
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Blog by Slug",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": "{{baseUrl}}/blog/BLOG_SLUG"
+          }
+        },
+        {
+          "name": "Create Blog (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/blog",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Test Blog\",\n  \"slug\": \"test-blog\",\n  \"content\": {},\n  \"category\": \"General\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Blog (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/blog/BLOG_ID",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Title\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Blog (Admin)",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/blog/BLOG_ID"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pooja",
+      "item": [
+        {
+          "name": "Get All Poojas",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": "{{baseUrl}}/pooja"
+          }
+        },
+        {
+          "name": "Get Pooja by ID",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": "{{baseUrl}}/pooja/POOJA_ID"
+          }
+        },
+        {
+          "name": "Book Pooja",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/pooja/book",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"poojaId\": \"POOJA_ID\",\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"phone\": \"9876543210\",\n  \"date\": \"2026-04-01\",\n  \"gotras\": [\"Kashyap\"]\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Donations",
+      "item": [
+        {
+          "name": "Get Donation Settings",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": "{{baseUrl}}/donations/settings"
+          }
+        },
+        {
+          "name": "Get All Donations (Admin)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/donations?page=1&limit=20",
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payment",
+      "item": [
+        {
+          "name": "Create Order",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/payment/create-order",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 1000,\n  \"currency\": \"INR\",\n  \"receipt\": \"test_receipt_001\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Razorpay Webhook",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-razorpay-signature", "value": "WEBHOOK_SIGNATURE" }
+            ],
+            "url": "{{baseUrl}}/payment/webhook",
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Festivals",
+      "item": [
+        {
+          "name": "Get All Festivals",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": "{{baseUrl}}/festivals"
+          }
+        },
+        {
+          "name": "Get Festival by ID",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": "{{baseUrl}}/festivals/FESTIVAL_ID"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Calendar",
+      "item": [
+        {
+          "name": "Get All Events",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": "{{baseUrl}}/calendar"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Darshan",
+      "item": [
+        {
+          "name": "Get Darshan Settings",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": "{{baseUrl}}/darshan"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Landing Pages",
+      "item": [
+        {
+          "name": "Get All Landing Pages",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": "{{baseUrl}}/landing-pages"
+          }
+        },
+        {
+          "name": "Get Landing Page by Slug",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": "{{baseUrl}}/landing-pages/PAGE_SLUG"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Songs",
+      "item": [
+        {
+          "name": "Get All Songs",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": "{{baseUrl}}/songs"
+          }
+        },
+        {
+          "name": "Get Song Categories",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": "{{baseUrl}}/song-categories"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Volunteers",
+      "item": [
+        {
+          "name": "Submit Volunteer Form",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/volunteers",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"jane@example.com\",\n  \"phone\": \"9876543210\",\n  \"area\": \"Event Management\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get All Volunteers (Admin)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/volunteers"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Inquiries",
+      "item": [
+        {
+          "name": "Submit Inquiry",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/inquiries",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"phone\": \"9876543210\",\n  \"message\": \"Test inquiry message\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get All Inquiries (Admin)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/inquiries"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Contact Settings",
+      "item": [
+        {
+          "name": "Get Contact Settings",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": "{{baseUrl}}/contact-settings"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Instagram Reels",
+      "item": [
+        {
+          "name": "Get Reels",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": "{{baseUrl}}/instagram-reels"
+          }
+        }
+      ]
+    },
+    {
+      "name": "External Links",
+      "item": [
+        {
+          "name": "Get External Links",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": "{{baseUrl}}/external-link"
+          }
+        }
+      ]
+    }
+  ]
+}

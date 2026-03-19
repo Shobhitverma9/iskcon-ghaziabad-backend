@@ -4,6 +4,8 @@ import { AppModule } from "./app.module"
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { json, urlencoded } from 'express';
+import { HttpAdapterHost } from '@nestjs/core';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
@@ -15,10 +17,17 @@ async function bootstrap() {
   })
 
   app.setGlobalPrefix("api")
+  const port = process.env.PORT || 3001
+
+  const { httpAdapter } = app.get(HttpAdapterHost);
+  app.useGlobalFilters(new AllExceptionsFilter(app.get(HttpAdapterHost)));
+
   app.use(cookieParser());
   app.use(helmet());
-
-  console.log("[Bootstrap] Middleware (cookieParser, helmet) initialized");
+  
+  // Increase body size limits for uploads
+  app.use(json({ limit: '50mb' }));
+  app.use(urlencoded({ extended: true, limit: '50mb' }));
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -28,7 +37,7 @@ async function bootstrap() {
     }),
   )
 
-  const port = process.env.PORT || 3001
+  console.log("[Bootstrap] Middleware (cookieParser, helmet, filters, body-limits, pipes) initialized");
 
   const mongoUri = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/iskcon-ghaziabad";
   console.log(`[Bootstrap] MONGODB_URI: ${mongoUri.replace(/:[^:]*@/, ':****@')}`); // Mask password if present

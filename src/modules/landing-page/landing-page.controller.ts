@@ -31,6 +31,9 @@ export class LandingPageController {
 
     @Get("public/:slug")
     findBySlug(@Param("slug") slug: string) {
+        if (slug === 'favicon.ico' || slug.endsWith('.png') || slug.endsWith('.jpg') || slug.endsWith('.jpeg')) {
+            throw new NotFoundException(`Static asset ${slug} not found as a landing page`)
+        }
         return this.landingPageService.findBySlug(slug)
     }
 

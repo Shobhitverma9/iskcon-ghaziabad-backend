@@ -26,4 +26,8 @@ export class CreateItemDto {
     @IsOptional()
     @IsBoolean()
     isCustomAmount?: boolean
+
+    @IsOptional()
+    @IsBoolean()
+    isActive?: boolean
 }

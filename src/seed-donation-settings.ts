@@ -23,7 +23,7 @@ async function bootstrap() {
                 accountNumber: '628601046447',
                 ifscCode: 'ICIC0006286',
                 upiId: 'iskconrajnagar@icici',
-                qrCodeUrl: ''
+                qrCodeUrl: '/qrdonate.webp'
             })
 
             await defaultSettings.save()
