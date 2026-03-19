@@ -15,7 +15,7 @@ export class CreateDonationDto {
   pan?: string
 
   @IsNumber()
-  @Min(100)
+  @Min(1)
   amount: number
 
   @IsNumber()

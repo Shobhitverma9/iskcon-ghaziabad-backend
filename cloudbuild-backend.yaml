@@ -4,6 +4,7 @@ steps:
   # ──────────────────────────────────────────────────────────────────────────────
   - name: 'gcr.io/cloud-builders/docker'
     id: 'build-backend'
+    dir: 'backend'
     args:
       - 'build'
       - '-t'
@@ -12,6 +13,7 @@ steps:
 
   - name: 'gcr.io/cloud-builders/docker'
     id: 'push-backend'
+    dir: 'backend'
     waitFor: ['build-backend']
     args:
       - 'push'
