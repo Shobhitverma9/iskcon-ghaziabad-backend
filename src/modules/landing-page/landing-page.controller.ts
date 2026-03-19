@@ -7,6 +7,7 @@ import {
     Param,
     Delete,
     UseGuards,
+    NotFoundException,
 } from "@nestjs/common"
 import { LandingPageService } from "./landing-page.service"
 import { CreateLandingPageDto } from "./dto/create-landing-page.dto"
