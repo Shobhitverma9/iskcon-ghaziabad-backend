@@ -246,18 +246,15 @@ export class AuthService {
 
     async logout(token: string) {
         if (!token) {
-            throw new BadRequestException('No session token provided');
+            this.logger.log('No session token provided for logout. Proceeding as successful.');
+            return { message: 'Logout successful' };
         }
 
         // Deactivate session
-        const result = await this.sessionModel.updateOne(
+        await this.sessionModel.updateOne(
             { token, isActive: true },
             { isActive: false }
         );
-
-        if (result.modifiedCount === 0) {
-            throw new UnauthorizedException('Invalid or expired session');
-        }
 
         return {
             message: 'Logout successful',
