@@ -1,4 +1,4 @@
-import { IsString, IsEmail, IsNumber, IsOptional, Min } from "class-validator"
+import { IsString, IsEmail, IsNumber, IsOptional, Min, IsObject } from "class-validator"
 
 export class CreateDonationDto {
   @IsString()
@@ -59,4 +59,8 @@ export class CreateDonationDto {
 
   @IsOptional()
   createdAt?: string
+
+  @IsOptional()
+  @IsObject()
+  metadata?: Record<string, any>
 }
