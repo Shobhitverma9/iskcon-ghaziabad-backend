@@ -49,10 +49,44 @@ async function bootstrap() {
             console.log("Admin user created successfully.")
         }
 
+        const admin2Email = "admin2@iskcon.com"
+        const admin2Password = "Admin2@1234"
+
+        console.log(`Checking for existing user: ${admin2Email}`)
+        const existingUser2 = await userModel.findOne({ email: admin2Email })
+
+        if (existingUser2) {
+            console.log("Admin user 2 already exists. Updating role to admin...")
+            existingUser2.role = 'admin'
+            await existingUser2.save()
+            console.log("Admin user 2 updated.")
+        } else {
+            console.log("Creating new admin user 2...")
+            const hashedPassword2 = await bcrypt.hash(admin2Password, 10)
+
+            const newUser2 = new userModel({
+                email: admin2Email,
+                password: hashedPassword2,
+                firstName: "Secondary",
+                lastName: "Admin",
+                phone: "0000000001",
+                role: "admin",
+                isEmailVerified: true,
+                loginAttempts: 0
+            })
+
+            await newUser2.save()
+            console.log("Admin user 2 created successfully.")
+        }
+
         console.log("------------------------------------------")
         console.log("Login Credentials:")
         console.log(`Email:    ${adminEmail}`)
         console.log(`Password: ${adminPassword}`)
+        console.log("------------------------------------------")
+        console.log("Login Credentials (Secondary Admin):")
+        console.log(`Email:    ${admin2Email}`)
+        console.log(`Password: ${admin2Password}`)
         console.log("------------------------------------------")
 
     } catch (error) {

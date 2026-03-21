@@ -66,7 +66,7 @@ export class AuthController {
     }
 
     private setSessionCookie(res: Response, token: string) {
-        res.cookie('session_token', token, {
+        res.cookie('__session', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
@@ -101,13 +101,13 @@ export class AuthController {
         @Req() req: Request,
         @Res({ passthrough: true }) res: Response,
     ) {
-        const token = req.cookies?.session_token;
+        const token = req.cookies?.__session;
 
         this.logger.log('Logout request received');
         const result = await this.authService.logout(token);
 
         // Clear session token cookie
-        res.clearCookie('session_token');
+        res.clearCookie('__session');
 
         this.logger.log('Logout successful');
         return result;

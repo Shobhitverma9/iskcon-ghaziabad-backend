@@ -17,7 +17,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
             jwtFromRequest: ExtractJwt.fromExtractors([
                 // Extract from cookie first
                 (request: Request) => {
-                    return request?.cookies?.session_token;
+                    return request?.cookies?.__session;
                 },
                 // Fallback to Authorization header
                 ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -32,7 +32,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         this.logger.log(`Validating payload: ${JSON.stringify(payload)}`);
 
         // Extract token from cookie or header
-        const token = req?.cookies?.session_token || ExtractJwt.fromAuthHeaderAsBearerToken()(req);
+        const token = req?.cookies?.__session || ExtractJwt.fromAuthHeaderAsBearerToken()(req);
 
         if (!token) {
             this.logger.warn('Validation failed: No token found');
