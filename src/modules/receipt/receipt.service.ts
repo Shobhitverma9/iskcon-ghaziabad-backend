@@ -5,6 +5,7 @@ import { exec } from 'child_process'
 import { promisify } from 'util'
 import * as fs from 'fs'
 import * as path from 'path'
+import * as puppeteer from 'puppeteer'
 import { Donation, DonationDocument } from '../donation/schemas/donation.schema'
 import { ReceiptCounter, ReceiptCounterDocument } from './schemas/receipt-counter.schema'
 import { NotificationService } from '../notification/notification.service'
@@ -203,42 +204,31 @@ export class ReceiptService {
     }
 
     /**
-     * Generate PDF using wkhtmltopdf
+     * Generate PDF using puppeteer
      */
     async generateReceiptPDF(donation: Donation, receiptNumber: string): Promise<Buffer> {
         const receiptData = this.mapDonationToReceiptData(donation, receiptNumber)
         const html = this.generateHTMLReceipt(receiptData)
 
-        // Save HTML to temp file
-        const tempHtmlPath = path.join(__dirname, `temp-receipt-${donation._id}.html`)
-        const tempPdfPath = path.join(__dirname, `temp-receipt-${donation._id}.pdf`)
-
         try {
-            fs.writeFileSync(tempHtmlPath, html)
-
-            // wkhtmltopdf binary path
-            const wkhtmltopdfPath = '"C:\\Program Files\\wkhtmltopdf\\bin\\wkhtmltopdf.exe"'
-            this.logger.log(`🛠️ Using wkhtmltopdf at: ${wkhtmltopdfPath}`)
-
-            // Build command
-            const command = `${wkhtmltopdfPath} --page-size A4 --margin-top 0 --margin-bottom 0 --margin-left 0 --margin-right 0 --enable-local-file-access --print-media-type "${tempHtmlPath}" "${tempPdfPath}"`
-            this.logger.log(`🛠️ Executing command: ${command}`)
-
-            await execAsync(command)
-
-
-            // Read PDF buffer
-            const pdfBuffer = fs.readFileSync(tempPdfPath)
-
-            // Clean up temp files
-            fs.unlinkSync(tempHtmlPath)
-            fs.unlinkSync(tempPdfPath)
-
-            return pdfBuffer
+            this.logger.log(`🛠️ Launching Puppeteer...`)
+            const browser = await puppeteer.launch({
+                headless: 'new',
+                args: ['--no-sandbox', '--disable-setuid-sandbox']
+            })
+            const page = await browser.newPage()
+            await page.setContent(html, { waitUntil: 'networkidle0' })
+            
+            const pdfBuffer = await page.pdf({
+                format: 'A4',
+                printBackground: true,
+                margin: { top: '0px', bottom: '0px', left: '0px', right: '0px' }
+            })
+            
+            await browser.close()
+            return Buffer.from(pdfBuffer)
         } catch (error) {
-            // Clean up on error
-            if (fs.existsSync(tempHtmlPath)) fs.unlinkSync(tempHtmlPath)
-            if (fs.existsSync(tempPdfPath)) fs.unlinkSync(tempPdfPath)
+            this.logger.error(`❌ Puppeteer PDF generation failed: ${error.message}`, error.stack)
             throw error
         }
     }
