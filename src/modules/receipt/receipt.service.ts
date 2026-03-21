@@ -403,12 +403,24 @@ ISKCON Ghaziabad Team
         }
 
         if (!donation.receiptNumber) {
-            throw new Error(`No receipt found for donation ${donationId}. Generate it first.`)
+            this.logger.warn(`No receipt found for donation ${donationId}. Generating a new one...`)
+            return this.generateAndSendReceipt(donationId);
         }
 
         // Regenerate PDF and resend
         const pdfBuffer = await this.generateReceiptPDF(donation, donation.receiptNumber)
-        await this.sendReceiptEmail(donation, donation.receiptNumber, pdfBuffer)
+        await this.sendReceiptEmail(donation, donation.receiptNumber, pdfBuffer, donation.receiptUrl)
+        
+        // Also send WhatsApp receipt if phone exists
+        if (donation.donorPhone && donation.receiptUrl) {
+            await this.notificationService.sendWhatsappReceipt(
+                donation.donorPhone,
+                donation.receiptUrl,
+                donation.donorName,
+                donation.amount,
+                donation.category
+            );
+        }
 
         // Update resend timestamp
         await this.donationModel.findByIdAndUpdate(donationId, {
