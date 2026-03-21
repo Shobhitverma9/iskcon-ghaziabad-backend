@@ -22,13 +22,21 @@ async function bootstrap() {
     ...(siteUrl ? [siteUrl] : []),
     ...(frontendUrl ? [frontendUrl] : []),
     "http://localhost:3000",
-  ]));
+  ])).map(o => o.replace(/\/$/, ""));
   console.log(`[Bootstrap] CORS allowed origins: ${allowedOrigins.join(", ")}`);
   app.enableCors({
     origin: (origin, callback) => {
       // Allow requests with no origin (server-to-server, Postman, curl)
       if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) return callback(null, true);
+
+      const originClean = origin.replace(/\/$/, "");
+      if (allowedOrigins.includes(originClean)) return callback(null, true);
+      
+      // Allow Firebase App Hosting preview URLs dynamically
+      if (originClean.endsWith(".hosted.app")) return callback(null, true);
+      // Allow official domains dynamically
+      if (originClean.endsWith("iskconghaziabad.com")) return callback(null, true);
+
       callback(new Error(`CORS: origin ${origin} not allowed`));
     },
     credentials: true,
