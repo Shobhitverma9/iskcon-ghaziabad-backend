@@ -23,7 +23,20 @@ FROM node:20-alpine AS production
 
 WORKDIR /app
 
-RUN apk add --no-cache libc6-compat
+# Install Chromium and necessary fonts/dependencies for Puppeteer
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont \
+    ghostscript \
+    libc6-compat
+
+# Tell Puppeteer to skip installing Chrome and use the Alpine installed one
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # Copy package files
 COPY package.json package-lock.json ./
