@@ -47,6 +47,9 @@ RUN npm ci --omit=dev && npm cache clean --force
 # Copy compiled output from builder stage
 COPY --from=builder /app/dist ./dist
 
+# Copy the HTML templates
+COPY public ./public
+
 # Expose the port NestJS listens on (Cloud Run injects PORT env var)
 EXPOSE 3001
 

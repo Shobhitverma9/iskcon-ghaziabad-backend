@@ -163,9 +163,8 @@ export class ReceiptService {
      * Generate receipt HTML from template
      */
     private generateHTMLReceipt(receiptData: ReceiptData): string {
-        // Correct path to public folder (sibling to backend)
-        // process.cwd() is usually backend root
-        const templatePath = path.resolve(process.cwd(), '../public/recipt.html')
+        // Correct path to internal public folder inside the backend container
+        const templatePath = path.resolve(process.cwd(), 'public/recipt.html')
         this.logger.log(`📄 Reading receipt template from: ${templatePath}`)
 
         if (!fs.existsSync(templatePath)) {

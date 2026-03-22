@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Iskcon | PDF</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        /* 
+            Import the desired font from Google fonts. 
+            */
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
+
+        @page {
+            size: A4;
+            margin: 8cm 0 3cm 0;
+
+            @top-left {
+                content: element(header);
+            }
+
+            @bottom-left {
+                content: element(footer);
+            }
+        }
+
+        textarea::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container-fluid py-5"
+        style="background: url('https://iskcon-admin-bucket.s3.ap-south-1.amazonaws.com/image_2023_08_18T05_51_36_789Z.png');background-repeat: no-repeat; background-size: cover;">
+        <div class="section-1" style="width: 26cm; height: 100%; margin: 0 auto; ">
+
+            <table>
+                <div class="row">
+                    <td>
+                        <div class="col-md-2">
+                            <img src="https://iskcon-admin-bucket.s3.ap-south-1.amazonaws.com/image_2023_08_18T05_51_36_790Z.png"
+                                class="img-fluid">
+                        </div>
+                    </td>
+                    <td>
+                        <table>
+                            <div class="col-md-10">
+                                <p
+                                    style="color: #3C4095; font-family: 'Helvetica',sans-serif; font-size: 22px; font-style: normal;  font-weight: 700; line-height: normal; letter-spacing: 0.06px; text-align: center; margin-bottom: 5px;">
+                                    International Society for Krishna Consciousness (ISKCON)</p>
+                                <p
+                                    style="color: #3C4095; font-family: 'Helvetica',sans-serif; font-size: 16px; font-style: normal; font-weight: 400;  line-height: normal; letter-spacing: 0.04px; text-align:center;margin-bottom: 5px;">
+                                    Founder Acharya: His Divine Grace A. C. Bhaktivedanta Swami Prabhupada</p>
+                                <div class="row">
+                                    <tr>
+                                        <td style="width: 62%;">
+                                            <div class="box-1"
+                                                style="border-radius: 6px;  border: 1px solid #EB248F; background: #FFF7AF; ">
+                                                <p
+                                                    style="color: var(--black, #484848); text-align: center; padding: 6px; font-family: 'Helvetica', sans-serif; font-size: 16px; font-style: normal;  font-weight: 400; line-height: normal; letter-spacing: 0.032px; margin-top: 10px;">
+                                                    Branch: Hare Krishna Marg, ISKCON Chowk R-11/35, Raj Nagar,
+                                                    Ghaziabad (U.P.)
+                                                    PIN: 201002 Phone: 7303451551<br>
+                                                    E-mail: iskconghaziabadacc@gmail.com
+                                                </p>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <p
+                                                style="color: #EB248F;font-family: 'Helvetica',sans-serif; font-size: 16px;  font-style: normal; font-weight: 400; line-height: normal; letter-spacing: 0.032px; ">
+                                                Donation Receipt No.</p>
+                                            <div class="box-2" style="border-radius: 4px; background: #F59DC3;">
+                                                <p
+                                                    style="color: #FFF; text-align: center; font-family: 'Helvetica', sans-serif; font-size: 14px; font-style: normal; font-weight: 700; line-height: normal; letter-spacing: 0.028px; padding: 10px;">
+                                                    DONOR'S<br> COPY</p>
+                                            </div>
+                                        </td>
+                                        <td style="width: 19%;">
+                                            <p
+                                                style="color: #000; text-align: center; font-family: B612; font-size: 18px; font-style: normal; font-weight: 400; line-height: normal; letter-spacing: 0.048px;position: relative; top: -18px;">
+                                                038011 {{id}}</p>
+                                            <div class="box-3"
+                                                style="border-radius: 4px;  border: 1px solid #EB248F; background: #EBEBF5; margin-top: -19px;">
+                                                <p
+                                                    style="color: #EB248F;  text-align: center; font-family: 'Helvetica',sans-serif;  font-size: 15px; margin-bottom: 0px;font-style: normal; font-weight: 400;  line-height: normal;  letter-spacing: 0.032px;  padding: 16px;margin-top: 0px;">
+                                                    Date <span style="color: var(--black, #484848); ">{{date}}</span>
+                                                </p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </div>
+                            </div>
+                        </table>
+                    </td>
+                </div>
+            </table>
+            <table style="width: 100%;">
+                <form>
+                    <table style="width: 100%;">
+                        <tr>
+                            <td>
+                                <div class="form-group" style="position: relative;">
+                                    <label for="exampleInputEmail1"
+                                        style="color: red; color: red; background: #fff;  position: absolute; top: -11px;  z-index: 99; left: 37%;">Donation
+                                        Amount in Rupees</label>
+                                    <div class="new-dic"
+                                        style="border-radius: 4px; border: 1px solid #EB248F; background: #EBEBF5;padding: 18px 10px; width: 98%; overflow-wrap:break-word;">
+                                        <textarea class="form-control col-md-12" placeholder=""
+                                            style="border:0px; width:65%;background: #EBEBF5;resize:none;"> {{ amount_in_words }}ONLY </textarea>
+                                        <div class="bg-1" style="position: absolute; right: 20%; top:16px;">
+                                            <img src="https://iskcon-admin-bucket.s3.ap-south-1.amazonaws.com/image_2023_08_18T05_51_36_787Z.png"
+                                                style="width: 30px; position:relative;
+                                        top:10px;"> {{amount}}
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    <table style="width: 100%; margin-top: 30px;">
+                        <tr>
+                            <td style="width: 50%;">
+                                <div class="box-4"
+                                    style="position: relative; border-radius: 4px; border: 1px solid #EB248F; background: #EBEBF5; padding: 10px;">
+                                    <label
+                                        style="color: red; color: red; background: #fff;  position: absolute; top: -11px;  z-index: 99; left: 7%;">(Donor
+                                        Details T&C mentioned backside for 80G/10BE)</label>
+
+                                    <table style="width: 100%;">
+                                        <tr>
+                                            <td>
+                                                <div class="form-group mt-3 mb-0" style="position: relative;">
+                                                    <label for="exampleInputEmail1"
+                                                        style="color: #484848;top: 14px;  z-index: 99; left:0; font-weight: 700; font-family: 'Helvetica',sans-serif;font-size: 16px;">
+                                                        Name - {{fullName}}</label>
+                                                    <input type="email" class="form-control col-md-12" placeholder=""
+                                                        style="border:0px; border-radius: 0px; background-color: transparent; border-bottom: 1px solid #828282 !important; width: 100%;">
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div class="form-group mb-0" style="position: relative;">
+                                                    <label for="exampleInputEmail1"
+                                                        style="color: #484848;top: 14px;  z-index: 99; left:0; font-weight: 700; font-family: 'Helvetica',sans-serif;font-size: 16px;">Address
+                                                        - {{address}}</label>
+                                                    <input type="email" class="form-control col-md-12" placeholder=""
+                                                        style="border:0px; border-radius: 0px; background-color: transparent; border-bottom: 1px solid #828282 !important; width: 100%;">
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div class="form-group mb-0"
+                                                    style="position: relative; margin-top: 10px;">
+                                                    <input type="email" class="form-control col-md-12" placeholder=""
+                                                        style="border:0px; border-radius: 0px; background-color: transparent; border-bottom: 1px solid #828282 !important; width: 100%;">
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div class="form-group mb-0" style="position: relative;">
+                                                    <label for="exampleInputEmail1"
+                                                        style="color: #484848;  top: 14px;  z-index: 99; left:0; font-weight: 700; font-family: 'Helvetica',sans-serif;font-size: 16px;">PIN
+                                                        - {{pinCode}}</label>
+                                                    <input type="email" class="form-control col-md-12" placeholder=""
+                                                        style="border:0px; border-radius: 0px; background-color: transparent; border-bottom: 1px solid #828282 !important; width: 100%;">
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% comment %} <tr>
+                                            <td>
+                                                <div class="form-group mb-0" style="position: relative;">
+                                                    <label for="exampleInputEmail1"
+                                                        style="color: #484848;top: 14px;  z-index: 99; left:0; font-weight: 700; font-family: 'Helvetica',sans-serif;font-size: 16px;">PIN</label>
+                                                    <input type="email" class="form-control col-md-12" placeholder=""
+                                                        style="border:0px; border-radius: 0px; background-color: transparent; border-bottom: 1px solid #828282 !important;width: 100%;">
+                                                </div>
+                                            </td>
+                                        </tr> {% endcomment %}
+                                        <tr>
+                                            <td>
+                                                <div class="form-group mb-0" style="position: relative;">
+                                                    <label for="exampleInputEmail1"
+                                                        style="color: #484848; top:14px;  z-index: 99; left:0; font-weight: 700; font-family: 'Helvetica',sans-serif;font-size: 16px;">PAN
+                                                        - {{panNo}}</label>
+                                                    <input type="email" class="form-control col-md-12" placeholder=""
+                                                        style="border:0px; border-radius: 0px; background-color: transparent; border-bottom: 1px solid #828282 !important;width: 100%;">
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div class="form-group mb-0" style="position: relative;">
+                                                    <label for="exampleInputEmail1"
+                                                        style="color: #484848; top: 14px;  z-index: 99; left:0; font-weight: 700; font-family: 'Helvetica',sans-serif;font-size: 16px;">Mobile
+                                                        No. - {{mobileNo}}</label>
+                                                    <input type="email" class="form-control col-md-12" placeholder=""
+                                                        style="border:0px; border-radius: 0px; background-color: transparent; border-bottom: 1px solid #828282 !important;width: 100%;">
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div class="form-group mb-3" style="position: relative;">
+                                                    <label for="exampleInputEmail1"
+                                                        style="color: #484848; top: 14px;  z-index: 99; left:0; font-weight: 700; font-family: 'Helvetica',sans-serif;font-size: 16px;">Email
+                                                        - {{email}}</label>
+                                                    <input type="email" class="form-control col-md-12" placeholder=""
+                                                        style="border:0px; border-radius: 0px; background-color: transparent; border-bottom: 1px solid #828282 !important; width: 100%;">
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="col-md-6 mt-3" style="margin-top: 20px;">
+                                    <div class="form-group" style="position: relative; margin-bottom: 20px;">
+                                        <label for="exampleInputEmail1"
+                                            style="color: red; color: red; background: #fff;  position: absolute; top: -11px;  z-index: 99; left: 13%;">Mode
+                                            of Payment (Cheque / Online / UPI / Cash)</label>
+                                        <input type="email" class="form-control col-md-12" placeholder=""
+                                            value="{{paymentMethodText}}"
+                                            style="border-radius: 4px; border: 1px solid #EB248F; background: #EBEBF5;padding: 16px 10px; width: 98%;">
+                                    </div>
+                                    <div class="form-group" style="position: relative; margin-bottom: 20px;">
+                                        <label for="exampleInputEmail1"
+                                            style="color: red; color: red; background: #fff;  position: absolute; top: -11px;  z-index: 99; left: 13%;">Payment
+                                            Details (Cheque / Transaction Details)</label>
+                                        <input type="email" class="form-control col-md-12" placeholder=""
+                                            value="{{transactionDetails}}"
+                                            style="border-radius: 4px; border: 1px solid #EB248F; background: #EBEBF5;padding: 16px 10px;width: 98%;">
+                                    </div>
+                                    <div class="form-group" style="position: relative;margin-bottom: 20px;">
+                                        <label for="exampleInputEmail1"
+                                            style="color: red; color: red; background: #fff;  position: absolute; top: -11px;  z-index: 99; left: 13%;">Purpose
+                                            of Donation (Corpus / General / Others)</label>
+                                        <input type="email" class="form-control col-md-12" placeholder=""
+                                            value="{{purposeId}}"
+                                            style="border-radius: 4px; border: 1px solid #EB248F; background: #EBEBF5;padding: 16px 10px; width: 98%;">
+                                    </div>
+                                    <table style="width: 100%;">
+                                        <tr>
+                                            <td style="width: 50%;">
+                                                <div class="col-md-6">
+                                                    <div class="form-group"
+                                                        style="position: relative;margin-bottom: 20px;">
+                                                        <label for="exampleInputEmail1"
+                                                            style="color: #3C4095;background: #fff;  position: absolute; top: 42px;  z-index: 99; left: 6%; font-family: 'Helvetica',sans-serif;font-size: 12px;">Donor
+                                                            Signature for Cash Payment</label>
+                                                        <input type="email" class="form-control col-md-12"
+                                                            placeholder=""
+                                                            style="border-radius: 4px; border: 1px solid #EB248F; background: #EBEBF5;padding: 16px 10px; width: 90%;">
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td style="width: 50%; margin-left: 20px;">
+                                                <div class="col-md-6">
+                                                    <div class="form-group"
+                                                        style="position: relative;margin-bottom: 20px;">
+                                                        <label for="exampleInputEmail1"
+                                                            style="color: #3C4095;background: #fff;  position: absolute; top: 42px;  z-index: 99; left: 4%; font-family: 'Helvetica',sans-serif;font-size: 12px;">Signature
+                                                            of ISKCON Representative</label>
+                                                        <input type="email" class="form-control col-md-12"
+                                                            placeholder="" value="{{user}}"
+                                                            style="border-radius: 4px; border: 1px solid #EB248F; background: #EBEBF5;padding: 16px 10px; width: 98%; font-style: italic;">
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </form>
+            </table>
+            <table style="position: relative;">
+                <tr>
+                    <td>
+                        <div class="row">
+                            <div class="col-md-11">
+                                <div class="box-4"
+                                    style="border-radius: 6px; border: 1px solid #EB248F; background: #FFF7AF; padding: 10px 20px;">
+                                    <p
+                                        style="color: var(--black, #484848);  text-align: center; font-family: 'Helvetica', sans-serif; font-size: 16px; font-style: normal; font-weight: 400; line-height: normal; letter-spacing: 0.032px; ">
+                                        Registered Office: Hare Krishna Land, Juhu, Mumbai - 400 049. Tel. (022) 2628
+                                        6579 E-mail: info@iskconindia.org Registered under Maharashtra Public Trust Act
+                                        1950, Vide Registration No. F-2179 (Bom) Unique Regn.No. (80G):AAATI0017PF20219
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="col-md-1">
+                                <p
+                                    style="color: var(--black, #484848); text-align: center; font-family: 'Helvetica',sans-serif; font-size: 24px; font-style: normal; font-weight: 700; line-height: normal; letter-spacing: 0.048px;  transform-origin: 33px 32px;  transform: rotate(-90deg); position: absolute; right: -70px; top: 0;">
+                                    P.T.O</p>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="container-fluid py-5" style="background-color: #fff;">
+        <div class="section-1" style="width: 26cm; height: 100%; margin: 0 auto; ">
+            <div class="row">
+                <div class="col-md-12">
+                    <p
+                        style="color: var(--black, #484848); text-align: left; font-family: 'Helvetica', sans-serif;  font-size: 24px;  font-style: normal; font-weight: 700; line-height: normal; letter-spacing: 0.048px; ">
+                        Please note Terms and Conditions (T&C):</p>
+                    <p
+                        style="color: var(--black, #484848);  font-family: 'Helvetica', sans-serif; font-size: 20px; font-style: normal; font-weight: 400;  line-height: normal; letter-spacing: 0.04px; ">
+                        1. This donation receipt is an acknowledgement only and not for the purpose of claiming 80G
+                        deduction.</p>
+                    <p
+                        style="color: var(--black, #484848);  font-family: 'Helvetica', sans-serif; font-size: 20px; font-style: normal; font-weight: 400;  line-height: normal; letter-spacing: 0.04px; ">
+                        2. Form No. 10BE, i.e., Certificate of donation under clause (ix) of sub-section (5) of section
+                        80G of the Income Tax Act, 1961, will be issued to you as per provisions of Income-tax Act,
+                        1961, and rules made thereunder. Generally 10BE will be issued by 31st May of the following
+                        financial year.</p>
+                    <p
+                        style="color: var(--black, #484848);  font-family: 'Helvetica', sans-serif; font-size: 20px; font-style: normal; font-weight: 400;  line-height: normal; letter-spacing: 0.04px; ">
+                        3. For all type of donations, irrespective of amount and mode of payment, full legal name and
+                        address with PIN are required. Further PAN is compulsory to obtain Form No10BE. Please ensure
+                        that the same are mentioned
+                        correctly in the donation receipt.</p>
+                    <p
+                        style="color: var(--black, #484848);  font-family: 'Helvetica', sans-serif; font-size: 20px; font-style: normal; font-weight: 400;  line-height: normal; letter-spacing: 0.04px; ">
+                        4. Form No. 10BE is not available for any cash donation.</p>
+                    <p
+                        style="color: var(--black, #484848);  font-family: 'Helvetica', sans-serif; font-size: 20px; font-style: normal; font-weight: 400;  line-height: normal; letter-spacing: 0.04px; ">
+                        5. 10BE will be available in PDF version onlyPlease ensure to mention correct WhatsApp number
+                        and E-mail id to receive the same.</p>
+                    <p
+                        style="color: var(--black, #484848);  font-family: 'Helvetica', sans-serif; font-size: 20px; font-style: normal; font-weight: 400;  line-height: normal; letter-spacing: 0.04px; ">
+                        6. PAN is compulsory for all donation of Rs. 50,000/- or more.</p>
+                    <p
+                        style="color: var(--black, #484848);  font-family: 'Helvetica', sans-serif; font-size: 20px; font-style: normal; font-weight: 400;  line-height: normal; letter-spacing: 0.04px; ">
+                        7. In case of payment by cheque, this donation receipt is valid subject to clearance of the
+                        cheque.</p>
+                    <p
+                        style="color: var(--black, #484848);  font-family: 'Helvetica', sans-serif; font-size: 20px; font-style: normal; font-weight: 400;  line-height: normal; letter-spacing: 0.04px; ">
+                        8. ISKCON's Unique Registration Number for 80G - AAATI0017PF20219 is valid till March 31, 2026
+                        and to be
+                        renewed thereafter periodically as per provisions of Income-tax Act, 1961, and rules made there
+                        under.</p>
+                    <p
+                        style="color: var(--black, #484848);  font-family: 'Helvetica', sans-serif; font-size: 20px; font-style: normal; font-weight: 400;  line-height: normal; letter-spacing: 0.04px; ">
+                        9. In case of any error/discrepancy in this receipt, including your Name, address and PAN,
+                        E-mail ID, WhatsApp number etcplease contact the receipt issuing centre for correction.</p>
+                    <p
+                        style="color: var(--black, #484848);  font-family: 'Helvetica', sans-serif; font-size: 20px; font-style: normal; font-weight: 400;  line-height: normal; letter-spacing: 0.04px; text-align: center;">
+                        Thank you for your support</p>
+                    <p
+                        style="color: var(--black, #484848);  font-family: 'Helvetica', sans-serif; font-size: 20px; font-style: normal; font-weight: 400;  line-height: normal; letter-spacing: 0.04px; text-align: center;">
+                        Please chant</p>
+                    <p
+                        style="color: var(--black, #484848);  font-family: 'Helvetica', sans-serif; font-size: 20px; font-style: normal; font-weight: 700;  line-height: normal; letter-spacing: 0.04px; text-align: center; padding: 10px 50px;">
+                        HARE KRISHNA HARE KRISHNA KRISHNA KRISHNA HARE HARE<br>
+                        HARE RAMA HARE RAMA RAMA RAMA HARE HARE</p>
+                    <p
+                        style="color: var(--black, #484848);  font-family: 'Helvetica', sans-serif; font-size: 20px; font-style: normal; font-weight: 400;  line-height: normal; letter-spacing: 0.04px; text-align: center;">
+                        and be happy.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"></script>
+</body>
+
+</html>
