@@ -225,17 +225,13 @@ export class ReceiptService {
             })
             const page = await browser.newPage()
 
-            // Navigate to about:blank first — this is a clean, guaranteed stable navigation.
-            // Then inject HTML directly via document.write() without triggering any further
-            // navigation events. This avoids "detached frame" errors caused by setContent's
-            // internal navigation on Alpine Linux Cloud Run, and avoids the data: URI URL
-            // length limit for large HTML templates.
-            await page.goto('about:blank', { waitUntil: 'domcontentloaded', timeout: 10000 })
-            await page.evaluate((html: string) => {
-                document.open()
-                document.write(html)
-                document.close()
-            }, html)
+            // Write HTML to a temp file and load via file:// protocol.
+            // This is the most reliable cross-platform approach — true file navigation
+            // works identically on Windows, macOS, and Alpine Linux Cloud Run,
+            // with no sandbox restrictions, no URL length limits, and no navigation tricks.
+            const tmpFile = path.join(require('os').tmpdir(), `receipt_${Date.now()}.html`)
+            fs.writeFileSync(tmpFile, html, 'utf-8')
+            await page.goto(`file://${tmpFile}`, { waitUntil: 'domcontentloaded', timeout: 30000 })
             // Brief wait for external resources (Google Fonts, S3 images, Bootstrap CDN)
             await new Promise(resolve => setTimeout(resolve, 1500));
             
@@ -246,6 +242,10 @@ export class ReceiptService {
             })
             
             await browser.close()
+
+            // Cleanup the temp HTML file
+            try { fs.unlinkSync(tmpFile) } catch (_) { /* ignore cleanup errors */ }
+
             return Buffer.from(pdfBuffer)
         } catch (error) {
             this.logger.error(`❌ Puppeteer PDF generation failed: ${error.message}`, error.stack)
