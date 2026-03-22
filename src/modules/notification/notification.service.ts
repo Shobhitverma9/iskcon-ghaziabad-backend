@@ -9,6 +9,7 @@ export class NotificationService {
     private postmarkClient: postmark.ServerClient;
     private readonly timespanelApiKey: string;
     private readonly timespanelBaseUrl: string;
+    private readonly timespanelSenderNumber: string;
 
     constructor(private configService: ConfigService) {
         const token = this.configService.get<string>('POSTMARK_API_TOKEN');
@@ -21,9 +22,12 @@ export class NotificationService {
 
         this.timespanelApiKey = this.configService.get<string>('TIMESPANEL_API_KEY');
         this.timespanelBaseUrl = this.configService.get<string>('TIMESPANEL_BASE_URL') || 'https://api.timespanel.com/v1/send';
+        this.timespanelSenderNumber = this.configService.get<string>('TIMESPANEL_SENDER_NUMBER') || '919217640062';
 
         if (!this.timespanelApiKey) {
             this.logger.warn('⚠️ TIMESPANEL_API_KEY not found. WhatsApp notifications will be mocked.');
+        } else {
+            this.logger.log(`✅ Timespanel initialized. Sender: ${this.timespanelSenderNumber}`);
         }
     }
 
@@ -61,10 +65,13 @@ export class NotificationService {
                 cleanPhone = `91${cleanPhone}`; // Auto-prefix India country code for 10-digit numbers
             }
 
+            this.logger.log(`Sending WhatsApp text message to: ${cleanPhone}`);
+
             // New structure verified with asyncmsg host
             const payload = {
                 messaging_product: "whatsapp",
                 recipient_type: "individual",
+                from: this.timespanelSenderNumber,
                 to: cleanPhone,
                 type: mediaUrl ? 'image' : 'text',
                 ...(mediaUrl ? {
@@ -80,7 +87,7 @@ export class NotificationService {
                 })
             };
 
-            this.logger.log(`Sending WhatsApp payload: ${JSON.stringify(payload, null, 2)}`);
+            this.logger.log(`Sending WhatsApp payload: ${JSON.stringify(payload)}`);
 
             const response = await axios.post(this.timespanelBaseUrl, payload, {
                 headers: {
@@ -89,10 +96,12 @@ export class NotificationService {
                 }
             });
 
-            if (response.data && (response.data.status === 'success' || response.data.success)) {
-                this.logger.log(`WhatsApp sent successfully to ${to}`);
+            this.logger.log(`WhatsApp API response for ${cleanPhone}: status=${response.status}, data=${JSON.stringify(response.data)}`);
+
+            if (response.data && (response.data.status === 's' || response.data.status === 'success' || response.data.success)) {
+                this.logger.log(`✅ WhatsApp text message sent successfully to ${cleanPhone}`);
             } else {
-                this.logger.error(`WhatsApp API error for ${to}: ${JSON.stringify(response.data)}`);
+                this.logger.error(`WhatsApp API non-success response for ${cleanPhone}: ${JSON.stringify(response.data)}`);
             }
         } catch (error) {
             this.logger.error(`Failed to send WhatsApp to ${to}`, error.response?.data || error.message);
@@ -126,6 +135,7 @@ export class NotificationService {
                 messaging_product: "whatsapp",
                 message_id: messageId,
                 recipient_type: "individual",
+                from: this.timespanelSenderNumber,
                 to: cleanPhone,
                 type: "template",
                 template: {
@@ -152,7 +162,7 @@ export class NotificationService {
                                     type: "document",
                                     document: {
                                         link: receiptUrl,
-                                        filename: "receipt"
+                                        filename: "receipt.pdf"
                                     }
                                 }
                             ]
@@ -161,7 +171,7 @@ export class NotificationService {
                 }
             };
 
-            this.logger.log(`Sending WhatsApp Receipt payload: ${JSON.stringify(payload, null, 2)}`);
+            this.logger.log(`Sending WhatsApp receipt to: ${cleanPhone}, URL: ${receiptUrl}`);
 
             const response = await axios.post(this.timespanelBaseUrl, payload, {
                 headers: {
@@ -170,10 +180,12 @@ export class NotificationService {
                 }
             });
 
-            if (response.data && (response.data.status === 'success' || response.data.success)) {
-                this.logger.log(`WhatsApp receipt template (receiptv4) sent successfully to ${to}`);
+            this.logger.log(`WhatsApp receipt API response for ${cleanPhone}: status=${response.status}, data=${JSON.stringify(response.data)}`);
+
+            if (response.data && (response.data.status === 's' || response.data.status === 'success' || response.data.success)) {
+                this.logger.log(`✅ WhatsApp receipt template sent successfully to ${cleanPhone}`);
             } else {
-                this.logger.error(`WhatsApp template API error for ${to}: ${JSON.stringify(response.data)}`);
+                this.logger.error(`WhatsApp template API non-success response for ${cleanPhone}: ${JSON.stringify(response.data)}`);
             }
         } catch (error) {
             this.logger.error(`Failed to send WhatsApp receipt template to ${to}`, error.response?.data || error.message);
