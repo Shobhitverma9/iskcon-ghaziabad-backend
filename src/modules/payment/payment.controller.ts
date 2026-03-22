@@ -139,10 +139,15 @@ export class PaymentController {
                     verifyPaymentDto.razorpaySubscriptionId
                 )
 
-                // Fire receipt generation + email + WhatsApp (non-blocking)
-                this.receiptService.generateAndSendReceipt(verifyPaymentDto.donationId).catch(err => {
-                    this.logger.error(`Failed to generate receipt for donation ${verifyPaymentDto.donationId}`, err)
-                })
+                // Await receipt generation — do NOT fire-and-forget on Cloud Run.
+                // Cloud Run does not guarantee background tasks complete after HTTP response is sent.
+                try {
+                    await this.receiptService.generateAndSendReceipt(verifyPaymentDto.donationId)
+                    this.logger.log(`✅ Receipt generated and sent for donation ${verifyPaymentDto.donationId}`)
+                } catch (receiptErr) {
+                    // Log but don't fail the payment verification — payment was captured successfully
+                    this.logger.error(`Failed to generate receipt for donation ${verifyPaymentDto.donationId}`, receiptErr)
+                }
             } else if (verifyPaymentDto.poojaId) {
                 // Update pooja booking with Razorpay details
                 await this.poojaService.updatePoojaRazorpayDetails(
