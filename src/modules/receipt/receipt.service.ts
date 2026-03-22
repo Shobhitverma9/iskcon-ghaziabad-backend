@@ -317,19 +317,17 @@ export class ReceiptService implements OnModuleDestroy { // Implemented OnModule
         try {
             const browser = await this.getBrowser()
             const page = await browser.newPage()
-            const tmpHtmlPath = path.join('/tmp', `receipt_${Date.now()}_${Math.random().toString(36).substring(7)}.html`)
 
             try {
                 // Set a fixed viewport before setting content to stabilize layout
                 await page.setViewport({ width: 1200, height: 800 })
 
-                // Write HTML to disk and use file:// protocol.
-                // setContent() tries to send 160KB+ of HTML over a single WebSocket message, 
-                // which can crash Chromium with "Target closed". Loading via file is 100% safe.
-                fs.writeFileSync(tmpHtmlPath, html, 'utf-8')
-                
-                await page.goto(`file://${tmpHtmlPath}`, {
-                    waitUntil: ['load', 'networkidle0'], 
+                // Use setContent() instead of writing to /tmp and using file:// protocol.
+                // Cloud Run's Chromium sandbox BLOCKS file:// navigation (ERR_FILE_NOT_FOUND).
+                // setContent() loads the HTML directly in-memory — safe and reliable since
+                // all images are already embedded as Base64 data URIs.
+                await page.setContent(html, {
+                    waitUntil: 'networkidle0',
                     timeout: 30000
                 })
 
@@ -349,13 +347,13 @@ export class ReceiptService implements OnModuleDestroy { // Implemented OnModule
                 // ALWAYS close the lightweight tab, even if generation failed.
                 // Otherwise, tabs leak memory in the persistent Browser and crash the container!
                 try { await page.close() } catch (_) {}
-                try { fs.unlinkSync(tmpHtmlPath) } catch (_) {}
             }
         } catch (error) {
             this.logger.error(`❌ Puppeteer PDF generation failed: ${error.message}`, error.stack)
             throw error
         }
     }
+
 
     /**
      * Send receipt email with PDF attachment
@@ -499,7 +497,7 @@ ISKCON Ghaziabad Team
             // Upload to Cloudinary
             this.logger.log(`☁️ Uploading receipt to Cloudinary...`)
             const filename = `receipts/${receiptNumber.replace(/\s+/g, '_')}_${donationId}.pdf`
-            const receiptUrl = await this.storageService.uploadFile(pdfBuffer, filename, 'application/pdf', 'raw')
+            const receiptUrl = await this.storageService.uploadFile(pdfBuffer, filename, 'application/pdf', 'image')
             this.logger.log(`✅ Uploaded to Cloudinary: ${receiptUrl}`)
 
             // Send email
@@ -559,7 +557,7 @@ ISKCON Ghaziabad Team
         if (!currentReceiptUrl) {
             this.logger.log(`No receiptUrl found for donation ${donationId} during resend. Uploading to Cloudinary...`);
             const filename = `receipts/${donation.receiptNumber.replace(/\s+/g, '_')}_${donationId}.pdf`;
-            currentReceiptUrl = await this.storageService.uploadFile(pdfBuffer, filename, 'application/pdf', 'raw');
+            currentReceiptUrl = await this.storageService.uploadFile(pdfBuffer, filename, 'application/pdf', 'image');
             donation.receiptUrl = currentReceiptUrl;
         }
 
@@ -611,7 +609,7 @@ ISKCON Ghaziabad Team
 
         // Upload to Cloudinary
         const filename = `receipts/${donation.receiptNumber.replace(/\s+/g, '_')}_${donationId}.pdf`
-        const cloudinaryUrl = await this.storageService.uploadFile(pdfBuffer, filename, 'application/pdf', 'raw')
+        const cloudinaryUrl = await this.storageService.uploadFile(pdfBuffer, filename, 'application/pdf', 'image')
 
         // Update donation with receipt URL
         donation.receiptUrl = cloudinaryUrl

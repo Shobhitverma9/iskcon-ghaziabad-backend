@@ -19,13 +19,13 @@ export class StorageService {
     async uploadFile(file: Buffer, filename: string, contentType: string = 'image/webp', resourceType: 'auto' | 'image' | 'video' | 'raw' = 'auto'): Promise<string> {
         this.logger.log(`Uploading to Cloudinary: ${filename} (Type: ${resourceType})`);
         return new Promise((resolve, reject) => {
-            // Include extension for raw files to ensure user-friendly URLs now that PDF delivery is enabled
-            const publicId = resourceType === 'raw' ? filename : filename.replace(/\.[^/.]+$/, "");
+            const publicId = filename.replace(/\.[^/.]+$/, "");
 
             const uploadStream = cloudinary.uploader.upload_stream(
                 {
                     public_id: publicId,
                     resource_type: resourceType,
+                    format: contentType === 'application/pdf' ? 'pdf' : undefined,
                     overwrite: true,
                 },
                 (error, result) => {
