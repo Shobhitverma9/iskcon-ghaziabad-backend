@@ -212,7 +212,7 @@ export class ReceiptService {
         try {
             this.logger.log(`🛠️ Launching Puppeteer...`)
             const args = [
-                '--no-sandbox', 
+                '--no-sandbox',
                 '--disable-setuid-sandbox',
                 '--disable-dev-shm-usage',
                 '--disable-gpu'
@@ -223,28 +223,44 @@ export class ReceiptService {
                 executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
                 args: args
             })
-            const page = await browser.newPage()
 
-            // Write HTML to a temp file and load via file:// protocol.
-            // This is the most reliable cross-platform approach — true file navigation
-            // works identically on Windows, macOS, and Alpine Linux Cloud Run,
-            // with no sandbox restrictions, no URL length limits, and no navigation tricks.
-            const tmpFile = path.join(require('os').tmpdir(), `receipt_${Date.now()}.html`)
-            fs.writeFileSync(tmpFile, html, 'utf-8')
-            await page.goto(`file://${tmpFile}`, { waitUntil: 'domcontentloaded', timeout: 30000 })
+            // Spin up a tiny ephemeral HTTP server to serve the HTML.
+            // This is the only approach that works reliably across ALL environments:
+            // - Windows local dev (no file:// restrictions)
+            // - Alpine Linux Cloud Run (no filesystem sandbox issues)  
+            // - No URL length limits (unlike data: URI)
+            // - No navigation frame detachment (unlike setContent)
+            const http = require('http') as typeof import('http')
+            let receiptServer: import('http').Server
+            const serverPort = await new Promise<number>((resolve, reject) => {
+                receiptServer = http.createServer((_req: any, res: any) => {
+                    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+                    res.end(html)
+                })
+                receiptServer.listen(0, '127.0.0.1', () => {
+                    const addr = receiptServer.address() as { port: number }
+                    resolve(addr.port)
+                })
+                receiptServer.on('error', reject)
+            })
+
+            this.logger.log(`📡 Serving HTML on http://127.0.0.1:${serverPort}`)
+            const page = await browser.newPage()
+            await page.goto(`http://127.0.0.1:${serverPort}`, {
+                waitUntil: 'domcontentloaded',
+                timeout: 30000
+            })
             // Brief wait for external resources (Google Fonts, S3 images, Bootstrap CDN)
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            
+            await new Promise(resolve => setTimeout(resolve, 1500))
+
             const pdfBuffer = await page.pdf({
                 format: 'A4',
                 printBackground: true,
                 margin: { top: '0px', bottom: '0px', left: '0px', right: '0px' }
             })
-            
-            await browser.close()
 
-            // Cleanup the temp HTML file
-            try { fs.unlinkSync(tmpFile) } catch (_) { /* ignore cleanup errors */ }
+            await browser.close()
+            receiptServer!.close()
 
             return Buffer.from(pdfBuffer)
         } catch (error) {
