@@ -246,6 +246,21 @@ export class ReceiptService {
 
             this.logger.log(`📡 Serving HTML on http://127.0.0.1:${serverPort}`)
             const page = await browser.newPage()
+
+            // Block external JS scripts — jQuery, Bootstrap JS, Popper are NOT needed in a PDF.
+            // On Cloud Run, fetching these CDN resources hangs, blocking DOMContentLoaded from
+            // firing and causing the 30s timeout. CSS and images are still allowed.
+            await page.setRequestInterception(true)
+            page.on('request', (req) => {
+                const url = req.url()
+                const isExternal = !url.includes('127.0.0.1')
+                if (req.resourceType() === 'script' && isExternal) {
+                    req.abort()
+                } else {
+                    req.continue()
+                }
+            })
+
             await page.goto(`http://127.0.0.1:${serverPort}`, {
                 waitUntil: 'domcontentloaded',
                 timeout: 30000
