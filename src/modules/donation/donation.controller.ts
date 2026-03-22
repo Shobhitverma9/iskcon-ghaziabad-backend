@@ -245,7 +245,8 @@ export class DonationController {
   @Roles('admin', 'volunteer', 'accounts')
   @Post(':id/resend-receipt')
   async resendReceipt(@Param('id') id: string) {
-    await this.donationService.resendReceipt(id);
-    return { success: true, message: 'Receipt resend triggered' };
+    // Forward the resend request to the new ReceiptService rather than the old DonationService mock logic
+    await this.donationService.processResendViaReceiptService(id);
+    return { success: true, message: 'Receipt resend triggered via PDF service' };
   }
 }

@@ -13,6 +13,7 @@ import type { CreateCategoryDto } from "./dto/create-category.dto"
 import type { CreateItemDto } from "./dto/create-item.dto"
 import { NotificationService } from "../notification/notification.service"
 import { User, UserDocument } from "../auth/schemas/user.schema"
+import { ReceiptService } from "../receipt/receipt.service"
 
 @Injectable()
 export class DonationService {
@@ -27,6 +28,7 @@ export class DonationService {
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly notificationService: NotificationService,
+    @Inject(ReceiptService) private readonly receiptService: ReceiptService,
   ) { }
 
   async findAll(period?: string): Promise<Donation[]> {
@@ -875,140 +877,11 @@ export class DonationService {
     return deleted
   }
 
-  // Details helper for email/receipt
-  private getDonationDetailsString(donation: Donation, hasPan: boolean = false): string {
-    return `
-      Donation Amount: ₹${donation.amount}
-      Date: ${new Date(donation.createdAt).toLocaleDateString()}
-      Transaction ID: ${donation.transactionId || 'N/A'}
-      Type: ${donation.type}
-      80G Eligible: ${hasPan ? 'Yes' : 'No'}
-    `;
-  }
-
-  // Mock Receipt Generation
-  private async generateReceipt(donation: Donation, hasPan: boolean): Promise<any> {
-    // MOCK: Return a simple buffer or object representing a PDF
-    // In real implementation this would use Puppeteer to generate PDF
-    const content = `Receipt for Donation ${donation._id}\n(80G Benefit: ${hasPan ? 'APPLICABLE' : 'N/A'})\n${this.getDonationDetailsString(donation, hasPan)}`;
-    return Buffer.from(content, 'utf-8');
-  }
-
   async resendReceipt(id: string): Promise<void> {
-    const donation = await this.findById(id);
-    if (!donation) {
-      throw new Error('Donation not found');
-    }
-
-    let hasPan = false;
-    if (donation.userId) {
-      const user = await this.userModel.findById(donation.userId);
-      if (user && user.pan) {
-        hasPan = true;
-      }
-    }
-
-    await this.sendDonationNotifications(donation, hasPan);
+    await this.receiptService.resendReceipt(id);
   }
 
-  private async sendDonationNotifications(donation: Donation, hasPan: boolean = false) {
-    const receiptBuffer = await this.generateReceipt(donation, hasPan);
-    // const details = this.getDonationDetailsString(donation, hasPan); // Unused
-
-    // 1. Email
-    if (donation.donorEmail) {
-      const isSubscription = !!donation.razorpaySubscriptionId;
-      const subject = isSubscription
-        ? `Hare Krishna! Welcome to Nitya Seva Family 🙏`
-        : (hasPan ? "Thank you for your donation! (80G Receipt)" : "Thank you for your donation!");
-
-      const title = isSubscription ? "Welcome to Nitya Seva" : "Thank You For Your Offering";
-      const message = isSubscription
-        ? `We are deeply honored to have you as a regular <strong>Nitya Sevak</strong>. Your monthly commitment of <strong>₹${donation.amount}</strong> to <strong>${donation.category}</strong> ensures that the service of Their Lordships continues uninterrupted.`
-        : `We have received your generous offering of <strong>₹${donation.amount}</strong> for <strong>${donation.category}</strong>. Your contribution brings us closer to our mission of serving humanity and spreading love for Krishna.`;
-
-      const htmlBody = `
-        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
-            <div style="background: linear-gradient(135deg, #8E1B3A 0%, #D1440C 100%); padding: 40px 20px; text-align: center; color: white;">
-                <h1 style="margin: 0; font-size: 28px; letter-spacing: 1px;">Hare Krishna!</h1>
-                <p style="margin: 10px 0 0; opacity: 0.9; font-size: 18px;">${title}</p>
-            </div>
-            
-            <div style="padding: 40px 30px; line-height: 1.7;">
-                <p style="font-size: 18px; color: #8E1B3A; font-weight: bold;">Dear ${donation.donorName || 'Devotee'},</p>
-                
-                <p>Please accept our humble obeisances. All glories to Srila Prabhupada.</p>
-                
-                <p style="font-size: 16px;">${message}</p>
-                
-                <div style="background-color: #FFF9F2; border-left: 4px solid #D1440C; padding: 20px; margin: 30px 0; border-radius: 0 10px 10px 0;">
-                    <p style="margin: 0; color: #555; font-style: italic; font-size: 14px;">
-                        "Whatever you do, whatever you eat, whatever you offer or give away, and whatever austerities you perform—do that, O son of Kuntī, as an offering to Me."<br>
-                        <strong style="color: #D1440C;">— Bhagavad Gita 9.27</strong>
-                    </p>
-                </div>
-
-                <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
-                    <tr>
-                        <td style="padding: 10px 0; color: #777; font-size: 14px; text-transform: uppercase; font-weight: bold;">Amount</td>
-                        <td style="padding: 10px 0; text-align: right; font-weight: bold; color: #8E1B3A; font-size: 18px;">₹${donation.amount}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 10px 0; color: #777; font-size: 14px; text-transform: uppercase; font-weight: bold;">Date</td>
-                        <td style="padding: 10px 0; text-align: right;">${new Date(donation.createdAt).toLocaleDateString()}</td>
-                    </tr>
-                    ${donation.transactionId ? `
-                    <tr>
-                        <td style="padding: 10px 0; color: #777; font-size: 14px; text-transform: uppercase; font-weight: bold;">Transaction ID</td>
-                        <td style="padding: 10px 0; text-align: right; font-family: monospace; font-size: 12px;">${donation.transactionId}</td>
-                    </tr>` : ''}
-                </table>
-
-                ${hasPan ? `
-                <div style="background-color: #E6F4EA; color: #1E8E3E; padding: 15px; border-radius: 10px; text-align: center; font-weight: bold; margin-bottom: 30px;">
-                    ✅ Your 80G Tax Exemption Receipt is attached.
-                </div>
-                ` : `
-                <div style="background-color: #F8F9FA; border: 1px dashed #DDD; padding: 15px; border-radius: 10px; text-align: center; font-size: 12px; color: #666; margin-bottom: 30px;">
-                    Note: Please find your confirmation receipt attached. Update your profile with PAN card to receive 80G tax benefits.
-                </div>
-                `}
-
-                <div style="text-align: center; border-top: 1px solid #EEE; pt-30; margin-top: 30px; padding-top: 30px;">
-                    <p style="margin: 0; font-weight: bold; color: #D1440C;">Chant and Be Happy</p>
-                    <p style="margin: 5px 0 0; color: #8E1B3A; font-weight: bold;">Hare Krishna Hare Krishna Krishna Krishna Hare Hare<br>Hare Rama Hare Rama Rama Rama Hare Hare</p>
-                </div>
-            </div>
-
-            <div style="background-color: #F8F9FA; padding: 20px; text-align: center; border-top: 1px solid #EEE; color: #999; font-size: 12px;">
-                <p style="margin: 0;">© ${new Date().getFullYear()} ISKCON Ghaziabad. All rights reserved.</p>
-                <p style="margin: 5px 0 0;">Sector 7, Raj Nagar, Ghaziabad, Uttar Pradesh 201002</p>
-            </div>
-        </div>
-      `;
-
-      const attachments = [{
-        "Name": `Receipt-${donation._id}.txt`, // MOCK .txt for now, change to .pdf later
-        "Content": receiptBuffer.toString('base64'),
-        "ContentType": "text/plain" // MOCK
-      }];
-
-      await this.notificationService.sendEmail(donation.donorEmail, subject, htmlBody, undefined, attachments);
-    }
-
-    // 2. SMS (Mock)
-    if (donation.donorPhone) {
-      await this.notificationService.sendSms(donation.donorPhone, `Hare Krishna! Thank you for your donation of Rs. ${donation.amount}. Receipt sent to email.`);
-    }
-
-    // 3. WhatsApp (Mock)
-    if (donation.donorPhone) {
-      // If hasPan, ideally message implies 80G receipt
-      const msg = hasPan
-        ? `Hare Krishna! Thank you for your donation of Rs. ${donation.amount}. Your 80G Receipt has been sent to your email.`
-        : `Hare Krishna! Thank you for your donation of Rs. ${donation.amount}. Receipt sent to email.`;
-
-      await this.notificationService.sendWhatsapp(donation.donorPhone, msg);
-    }
+  async processResendViaReceiptService(id: string): Promise<void> {
+    await this.receiptService.resendReceipt(id);
   }
 }

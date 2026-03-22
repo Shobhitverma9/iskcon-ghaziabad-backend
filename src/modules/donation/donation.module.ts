@@ -12,6 +12,7 @@ import { StorageModule } from "../../shared/storage/storage.module"
 import { NotificationModule } from "../notification/notification.module"
 import { User, UserSchema } from "../auth/schemas/user.schema"
 import { DonationSettings, DonationSettingsSchema } from "./schemas/donation-settings.schema"
+import { ReceiptModule } from "../receipt/receipt.module"
 import { DonationSettingsController } from "./donation-settings.controller"
 import { DonationSettingsService } from "./donation-settings.service"
 import { DonationCronService } from "./donation-cron.service"
@@ -31,6 +32,7 @@ import { DonationFollowupService } from "./donation-followup.service"
     // MongooseModule.forFeature included above
     StorageModule,
     NotificationModule,
+    ReceiptModule,
   ],
   controllers: [DonationSettingsController, DonationController],
   providers: [DonationService, ImageProcessingService, DonationSettingsService, DonationCronService, DonationFollowupService],
