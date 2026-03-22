@@ -195,9 +195,19 @@ export class ReceiptService {
         // Remove any remaining template comments (if any)
         html = html.replace(/\{%\s*comment\s*%\}[\s\S]*?\{%\s*endcomment\s*%\}/g, '')
 
-        // Inject Bootstrap CSS
-        const bootstrapLink = '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">'
-        html = html.replace('</head>', `${bootstrapLink}\n</head>`)
+        // Remove Google Fonts @import — Cloud Run can't reliably fetch it;
+        // Helvetica/Arial fallbacks in the template are sufficient for the PDF.
+        html = html.replace(/@import url\([^)]*fonts\.googleapis\.com[^)]*\);?/g, '')
+
+        // Inline Bootstrap CSS from the locally bundled file (no CDN needed)
+        const bootstrapPath = path.resolve(process.cwd(), 'public/bootstrap.min.css')
+        if (fs.existsSync(bootstrapPath)) {
+            const bootstrapCSS = fs.readFileSync(bootstrapPath, 'utf-8')
+            html = html.replace('</head>', `<style>${bootstrapCSS}</style>\n</head>`)
+        }
+
+        // Strip external script tags (jQuery, Popper, Bootstrap JS) — not needed in a PDF
+        html = html.replace(/<script\s+src=["'][^"']*["'][^>]*><\/script>/gi, '')
 
         return html
     }
@@ -224,49 +234,13 @@ export class ReceiptService {
                 args: args
             })
 
-            // Spin up a tiny ephemeral HTTP server to serve the HTML.
-            // This is the only approach that works reliably across ALL environments:
-            // - Windows local dev (no file:// restrictions)
-            // - Alpine Linux Cloud Run (no filesystem sandbox issues)  
-            // - No URL length limits (unlike data: URI)
-            // - No navigation frame detachment (unlike setContent)
-            const http = require('http') as typeof import('http')
-            let receiptServer: import('http').Server
-            const serverPort = await new Promise<number>((resolve, reject) => {
-                receiptServer = http.createServer((_req: any, res: any) => {
-                    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
-                    res.end(html)
-                })
-                receiptServer.listen(0, '127.0.0.1', () => {
-                    const addr = receiptServer.address() as { port: number }
-                    resolve(addr.port)
-                })
-                receiptServer.on('error', reject)
-            })
-
-            this.logger.log(`📡 Serving HTML on http://127.0.0.1:${serverPort}`)
+            // The HTML is 100% self-contained (Bootstrap inlined, no CDN scripts, no Google Fonts).
+            // setContent() loads it instantly — no network requests, no timeouts, no frame detachment.
             const page = await browser.newPage()
-
-            // Block external JS scripts — jQuery, Bootstrap JS, Popper are NOT needed in a PDF.
-            // On Cloud Run, fetching these CDN resources hangs, blocking DOMContentLoaded from
-            // firing and causing the 30s timeout. CSS and images are still allowed.
-            await page.setRequestInterception(true)
-            page.on('request', (req) => {
-                const url = req.url()
-                const isExternal = !url.includes('127.0.0.1')
-                if (req.resourceType() === 'script' && isExternal) {
-                    req.abort()
-                } else {
-                    req.continue()
-                }
-            })
-
-            await page.goto(`http://127.0.0.1:${serverPort}`, {
+            await page.setContent(html, {
                 waitUntil: 'domcontentloaded',
                 timeout: 30000
             })
-            // Brief wait for external resources (Google Fonts, S3 images, Bootstrap CDN)
-            await new Promise(resolve => setTimeout(resolve, 1500))
 
             const pdfBuffer = await page.pdf({
                 format: 'A4',
@@ -275,7 +249,6 @@ export class ReceiptService {
             })
 
             await browser.close()
-            receiptServer!.close()
 
             return Buffer.from(pdfBuffer)
         } catch (error) {
