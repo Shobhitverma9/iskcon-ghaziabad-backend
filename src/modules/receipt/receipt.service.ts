@@ -224,15 +224,18 @@ export class ReceiptService {
                 args: args
             })
             const page = await browser.newPage()
-            
-            // Use goto with data URI instead of setContent to avoid "detached frame" on Cloud Run.
-            // setContent internally triggers a frame navigation from about:blank which fails in
-            // sandboxed Alpine Linux containers. data: URI avoids that navigation entirely.
-            const encodedHtml = `data:text/html;charset=UTF-8,${encodeURIComponent(html)}`
-            await page.goto(encodedHtml, {
-                waitUntil: 'domcontentloaded',
-                timeout: 30000
-            })
+
+            // Navigate to about:blank first — this is a clean, guaranteed stable navigation.
+            // Then inject HTML directly via document.write() without triggering any further
+            // navigation events. This avoids "detached frame" errors caused by setContent's
+            // internal navigation on Alpine Linux Cloud Run, and avoids the data: URI URL
+            // length limit for large HTML templates.
+            await page.goto('about:blank', { waitUntil: 'domcontentloaded', timeout: 10000 })
+            await page.evaluate((html: string) => {
+                document.open()
+                document.write(html)
+                document.close()
+            }, html)
             // Brief wait for external resources (Google Fonts, S3 images, Bootstrap CDN)
             await new Promise(resolve => setTimeout(resolve, 1500));
             
