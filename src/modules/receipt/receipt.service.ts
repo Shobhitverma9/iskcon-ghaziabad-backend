@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 import { exec } from 'child_process'
@@ -6,6 +6,7 @@ import { promisify } from 'util'
 import * as fs from 'fs'
 import * as path from 'path'
 import * as puppeteer from 'puppeteer'
+import { Browser } from 'puppeteer' // Added Browser import
 import { Donation, DonationDocument } from '../donation/schemas/donation.schema'
 import { ReceiptCounter, ReceiptCounterDocument } from './schemas/receipt-counter.schema'
 import { NotificationService } from '../notification/notification.service'
@@ -31,8 +32,10 @@ interface ReceiptData {
 }
 
 @Injectable()
-export class ReceiptService {
+export class ReceiptService implements OnModuleDestroy { // Implemented OnModuleDestroy
     private readonly logger = new Logger(ReceiptService.name)
+    private browser: Browser | null = null; // Added browser property
+    private browserPromise: Promise<Browser> | null = null; // Added browserPromise property
 
     constructor(
         @InjectModel(Donation.name) private donationModel: Model<DonationDocument>,
@@ -40,6 +43,62 @@ export class ReceiptService {
         private readonly notificationService: NotificationService,
         private readonly storageService: StorageService,
     ) { }
+
+    async onModuleDestroy() {
+        if (this.browser) {
+            this.logger.log('Closing Puppeteer browser instance...');
+            await this.browser.close();
+            this.browser = null;
+        }
+    }
+
+    /**
+     * Singleton pattern for Chromium Browser to prevent Cloud Run OOM crashes.
+     * Launching a new Chromium binary per request consumes 250MB+ RAM and kills
+     * the 1GB container immediately if multiple requests (or clicks) happen at once.
+     */
+    private getBrowser(): Promise<Browser> {
+        if (this.browser && this.browser.isConnected()) {
+            return Promise.resolve(this.browser);
+        }
+        
+        if (this.browserPromise) {
+            return this.browserPromise;
+        }
+
+        this.logger.log(`🛠️ Launching persistent Puppeteer Browser instance...`)
+        this.browserPromise = puppeteer.launch({
+            headless: true,
+            pipe: true, // CRITICAL FOR CLOUD RUN: Communicate over pipes instead of reliable-dropping WebSockets
+            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+            args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--disable-gpu',
+                '--disable-features=IsolateOrigins,site-per-process', // Safe on Debian, prevents iframe memory leaks
+                '--disk-cache-size=0', // Prevent writing cache to /tmp (which is RAM on Cloud Run)
+                '--disable-extensions',
+                '--js-flags=--max-old-space-size=512' // Constrain Chrome JS engine to avoid OOM
+            ]
+        }).then(browser => {
+            this.browser = browser;
+            this.browserPromise = null;
+            
+            // Handle unexpected browser crashes (e.g. fatal OOM)
+            browser.on('disconnected', () => {
+                this.logger.warn(`⚠️ Puppeteer Browser disconnected. It will be restarted on next request.`);
+                this.browser = null;
+            });
+            
+            return browser;
+        }).catch(err => {
+            this.browserPromise = null;
+            throw err;
+        });
+
+        return this.browserPromise;
+    }
 
     /**
      * Generate next sequential receipt number
@@ -192,6 +251,20 @@ export class ReceiptService {
         html = html.replace(/\{\{\s*paymentMethodText\s*\}\}/g, this.getPaymentMethodText(receiptData.paymentMethod))
         html = html.replace(/\{\{\s*transactionDetails\s*\}\}/g, receiptData.transactionDetails)
 
+        // Convert external S3 images to offline Base64 to prevent Page.printToPDF timeouts
+        try {
+            const publicPath = path.resolve(process.cwd(), 'public/images')
+            const bgBase64 = fs.readFileSync(path.join(publicPath, 'bg.png')).toString('base64')
+            const logoBase64 = fs.readFileSync(path.join(publicPath, 'logo.png')).toString('base64')
+            const rupeeBase64 = fs.readFileSync(path.join(publicPath, 'rupee.png')).toString('base64')
+            
+            html = html.replace(/https:\/\/iskcon-admin-bucket\.s3\.ap-south-1\.amazonaws\.com\/image_2023_08_18T05_51_36_789Z\.png/g, `data:image/png;base64,${bgBase64}`)
+            html = html.replace(/https:\/\/iskcon-admin-bucket\.s3\.ap-south-1\.amazonaws\.com\/image_2023_08_18T05_51_36_790Z\.png/g, `data:image/png;base64,${logoBase64}`)
+            html = html.replace(/https:\/\/iskcon-admin-bucket\.s3\.ap-south-1\.amazonaws\.com\/image_2023_08_18T05_51_36_787Z\.png/g, `data:image/png;base64,${rupeeBase64}`)
+        } catch (imgError) {
+            this.logger.warn(`Could not load local fallback images for PDF, using remote S3 URLs instead. Error: ${imgError.message}`)
+        }
+
         // Remove any remaining template comments (if any)
         html = html.replace(/\{%\s*comment\s*%\}[\s\S]*?\{%\s*endcomment\s*%\}/g, '')
 
@@ -209,6 +282,28 @@ export class ReceiptService {
         // Strip external script tags (jQuery, Popper, Bootstrap JS) — not needed in a PDF
         html = html.replace(/<script\s+src=["'][^"']*["'][^>]*><\/script>/gi, '')
 
+        // CRITICAL FIX FOR "Protocol error (Page.printToPDF)":
+        // The original template uses `height: 100%` and `@page { margin: 8cm }`.
+        // If the content (e.g. a long amount_in_words for Monthly donations) pushes the 100%-height container
+        // past the printable boundary, Chromium's PDF paginator gets stuck in an infinite layout loop and crashes!
+        // We MUST force all outer containers to `height: auto` and override the broken page margins.
+        html = html.replace('</head>', `
+        <style>
+            @media print {
+                html, body { height: auto !important; margin: 0 !important; padding: 0 !important; }
+                .section-1, .container-fluid { 
+                    height: auto !important; 
+                    min-height: 0 !important; 
+                    page-break-inside: avoid !important;
+                }
+                @page { margin: 0 !important; size: A4; }
+            }
+        </style>
+        </head>`)
+        
+        // As a final safety net, manually strip the inline "height: 100%;" from `.section-1` divs
+        html = html.replace(/height:\s*100%\s*;/gi, '')
+
         return html
     }
 
@@ -220,37 +315,42 @@ export class ReceiptService {
         const html = this.generateHTMLReceipt(receiptData)
 
         try {
-            this.logger.log(`🛠️ Launching Puppeteer...`)
-            const args = [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage',
-                '--disable-gpu'
-            ];
-
-            const browser = await puppeteer.launch({
-                headless: true,
-                executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
-                args: args
-            })
-
-            // The HTML is 100% self-contained (Bootstrap inlined, no CDN scripts, no Google Fonts).
-            // setContent() loads it instantly — no network requests, no timeouts, no frame detachment.
+            const browser = await this.getBrowser()
             const page = await browser.newPage()
-            await page.setContent(html, {
-                waitUntil: 'domcontentloaded',
-                timeout: 30000
-            })
+            const tmpHtmlPath = path.join('/tmp', `receipt_${Date.now()}_${Math.random().toString(36).substring(7)}.html`)
 
-            const pdfBuffer = await page.pdf({
-                format: 'A4',
-                printBackground: true,
-                margin: { top: '0px', bottom: '0px', left: '0px', right: '0px' }
-            })
+            try {
+                // Set a fixed viewport before setting content to stabilize layout
+                await page.setViewport({ width: 1200, height: 800 })
 
-            await browser.close()
+                // Write HTML to disk and use file:// protocol.
+                // setContent() tries to send 160KB+ of HTML over a single WebSocket message, 
+                // which can crash Chromium with "Target closed". Loading via file is 100% safe.
+                fs.writeFileSync(tmpHtmlPath, html, 'utf-8')
+                
+                await page.goto(`file://${tmpHtmlPath}`, {
+                    waitUntil: ['load', 'networkidle0'], 
+                    timeout: 30000
+                })
 
-            return Buffer.from(pdfBuffer)
+                // Bring the page to the front to ensure the renderer thread is fully active
+                await page.bringToFront()
+
+                const pdfBuffer = await page.pdf({
+                    format: 'A4',
+                    printBackground: true, 
+                    margin: { top: '0px', bottom: '0px', left: '0px', right: '0px' },
+                    preferCSSPageSize: true, // Forces Chrome to respect our @page overrides safely
+                    timeout: 30000 
+                })
+
+                return Buffer.from(pdfBuffer)
+            } finally {
+                // ALWAYS close the lightweight tab, even if generation failed.
+                // Otherwise, tabs leak memory in the persistent Browser and crash the container!
+                try { await page.close() } catch (_) {}
+                try { fs.unlinkSync(tmpHtmlPath) } catch (_) {}
+            }
         } catch (error) {
             this.logger.error(`❌ Puppeteer PDF generation failed: ${error.message}`, error.stack)
             throw error
@@ -358,18 +458,38 @@ ISKCON Ghaziabad Team
                 throw new Error(`Donation ${donationId} not found`)
             }
 
-            // Skip if receipt already generated AND has URL (if we want to ensure URL exists)
-            if (donation.receiptNumber && donation.receiptUrl) {
-                this.logger.warn(`⚠️ Receipt already generated and uploaded for donation ${donationId}: ${donation.receiptNumber}`)
+            // STRICT CONCURRENCY LOCK: 
+            // If receiptNumber already exists, another request (Webhook or /verify) 
+            // has already claimed this donation and is currently generating the PDF.
+            // We MUST return immediately to prevent launching concurrent Chromium instances.
+            // Note: Manual Resends use resendReceipt() which bypasses this check.
+            if (donation.receiptNumber) {
+                this.logger.warn(`⚠️ Receipt generation already claimed or completed for donation ${donationId}. Aborting duplicate request.`)
                 return
             }
 
-            // Generate receipt number if not exists
-            let receiptNumber = donation.receiptNumber;
-            if (!receiptNumber) {
-                receiptNumber = await this.generateReceiptNumber()
-                this.logger.log(`🔢 Generated receipt number: ${receiptNumber}`)
+            // Generate new receipt number 
+            const receiptNumber = await this.generateReceiptNumber()
+            
+            // ATOMIC LOCK: Final safety net against same-millisecond race conditions
+            const claimed = await this.donationModel.findOneAndUpdate(
+                { 
+                    _id: donationId, 
+                    $or: [
+                        { receiptNumber: { $exists: false } },
+                        { receiptNumber: null }
+                    ]
+                },
+                { receiptNumber: receiptNumber },
+                { new: true }
+            )
+
+            if (!claimed) {
+                this.logger.warn(`⚠️ Receipt generation already in progress by another request for ${donationId}. Aborting concurrent task.`)
+                return
             }
+            
+            this.logger.log(`🔢 Claimed and generated receipt number: ${receiptNumber}`)
 
             // Generate PDF
             this.logger.log(`📄 Generating PDF...`)
