@@ -12,7 +12,7 @@ export class NotificationService {
     private readonly timespanelSenderNumber: string;
 
     constructor(private configService: ConfigService) {
-        const token = this.configService.get<string>('POSTMARK_API_TOKEN');
+        const token = this.configService.get<string>('POSTMARK_API_TOKEN')?.trim();
         if (token) {
             this.postmarkClient = new postmark.ServerClient(token);
             this.logger.log('✅ Postmark client initialized successfully');
@@ -20,9 +20,9 @@ export class NotificationService {
             this.logger.error('❌ POSTMARK_API_TOKEN not found in configuration. Email sending will fail.');
         }
 
-        this.timespanelApiKey = this.configService.get<string>('TIMESPANEL_API_KEY');
-        this.timespanelBaseUrl = this.configService.get<string>('TIMESPANEL_BASE_URL') || 'https://api.timespanel.com/v1/send';
-        this.timespanelSenderNumber = this.configService.get<string>('TIMESPANEL_SENDER_NUMBER') || '919217640062';
+        this.timespanelApiKey = this.configService.get<string>('TIMESPANEL_API_KEY')?.trim();
+        this.timespanelBaseUrl = this.configService.get<string>('TIMESPANEL_BASE_URL')?.trim() || 'https://api.timespanel.com/v1/send';
+        this.timespanelSenderNumber = this.configService.get<string>('TIMESPANEL_SENDER_NUMBER')?.trim() || '919217640062';
 
         if (!this.timespanelApiKey) {
             this.logger.warn('⚠️ TIMESPANEL_API_KEY not found. WhatsApp notifications will be mocked.');
