@@ -56,11 +56,16 @@ export class NotificationService {
         }
 
         try {
+            let cleanPhone = to.replace(/\D/g, ''); // Remove all non-numeric characters like +, spaces, etc.
+            if (cleanPhone.length === 10) {
+                cleanPhone = `91${cleanPhone}`; // Auto-prefix India country code for 10-digit numbers
+            }
+
             // New structure verified with asyncmsg host
             const payload = {
                 messaging_product: "whatsapp",
                 recipient_type: "individual",
-                to: to.replace('+', '').replace(/\s/g, ''),
+                to: cleanPhone,
                 type: mediaUrl ? 'image' : 'text',
                 ...(mediaUrl ? {
                     image: {
@@ -112,11 +117,16 @@ export class NotificationService {
             // Extract first name
             const firstName = donorName.split(' ')[0] || donorName;
 
+            let cleanPhone = to.replace(/\D/g, ''); // Remove all non-numeric characters like +, spaces, etc.
+            if (cleanPhone.length === 10) {
+                cleanPhone = `91${cleanPhone}`; // Auto-prefix India country code for 10-digit numbers
+            }
+
             const payload = {
                 messaging_product: "whatsapp",
                 message_id: messageId,
                 recipient_type: "individual",
-                to: to.replace('+', '').replace(/\s/g, ''),
+                to: cleanPhone,
                 type: "template",
                 template: {
                     name: "receiptv4",
