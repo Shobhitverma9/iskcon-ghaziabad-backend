@@ -211,28 +211,29 @@ export class ReceiptService {
 
         try {
             this.logger.log(`🛠️ Launching Puppeteer...`)
+            const args = [
+                '--no-sandbox', 
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--disable-gpu'
+            ];
+
             const browser = await puppeteer.launch({
                 headless: true,
                 executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
-                args: [
-                    '--no-sandbox', 
-                    '--disable-setuid-sandbox',
-                    '--disable-dev-shm-usage',
-                    '--disable-gpu',
-                    '--disable-software-rasterizer',
-                    '--no-zygote'
-                ]
+                args: args
             })
             const page = await browser.newPage()
             
-            // Set longer timeout and less strict networkidle to avoid frame detached errors on Cloud Run
-            await page.setDefaultNavigationTimeout(30000); 
-            
-            await page.setContent(html, { 
+            // Use goto with data URI instead of setContent to avoid "detached frame" on Cloud Run.
+            // setContent internally triggers a frame navigation from about:blank which fails in
+            // sandboxed Alpine Linux containers. data: URI avoids that navigation entirely.
+            const encodedHtml = `data:text/html;charset=UTF-8,${encodeURIComponent(html)}`
+            await page.goto(encodedHtml, {
                 waitUntil: 'domcontentloaded',
                 timeout: 30000
             })
-            // Manual wait to allow images and fonts to load without hanging on Puppeteer's load event listener
+            // Brief wait for external resources (Google Fonts, S3 images, Bootstrap CDN)
             await new Promise(resolve => setTimeout(resolve, 1500));
             
             const pdfBuffer = await page.pdf({
