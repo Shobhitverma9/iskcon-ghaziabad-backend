@@ -214,7 +214,12 @@ export class ReceiptService {
             const browser = await puppeteer.launch({
                 headless: true,
                 executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
-                args: ['--no-sandbox', '--disable-setuid-sandbox']
+                args: [
+                    '--no-sandbox', 
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-gpu'
+                ]
             })
             const page = await browser.newPage()
             
@@ -222,9 +227,11 @@ export class ReceiptService {
             await page.setDefaultNavigationTimeout(30000); 
             
             await page.setContent(html, { 
-                waitUntil: ['load', 'networkidle2'],
+                waitUntil: 'domcontentloaded',
                 timeout: 30000
             })
+            // Manual wait to allow images and fonts to load without hanging on Puppeteer's load event listener
+            await new Promise(resolve => setTimeout(resolve, 1500));
             
             const pdfBuffer = await page.pdf({
                 format: 'A4',
