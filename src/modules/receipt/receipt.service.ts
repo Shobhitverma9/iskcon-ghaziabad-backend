@@ -217,7 +217,14 @@ export class ReceiptService {
                 args: ['--no-sandbox', '--disable-setuid-sandbox']
             })
             const page = await browser.newPage()
-            await page.setContent(html, { waitUntil: 'networkidle0' })
+            
+            // Set longer timeout and less strict networkidle to avoid frame detached errors on Cloud Run
+            await page.setDefaultNavigationTimeout(30000); 
+            
+            await page.setContent(html, { 
+                waitUntil: ['load', 'networkidle2'],
+                timeout: 30000
+            })
             
             const pdfBuffer = await page.pdf({
                 format: 'A4',
