@@ -551,23 +551,35 @@ ISKCON Ghaziabad Team
             return this.generateAndSendReceipt(donationId);
         }
 
-        // Regenerate PDF and resend
+        // Regenerate PDF buffer
         const pdfBuffer = await this.generateReceiptPDF(donation, donation.receiptNumber)
-        await this.sendReceiptEmail(donation, donation.receiptNumber, pdfBuffer, donation.receiptUrl)
         
-        // Also send WhatsApp receipt if phone exists
-        if (donation.donorPhone && donation.receiptUrl) {
+        // Ensure a Cloudinary URL exists (critical for WhatsApp templates which require a link, not a buffer)
+        let currentReceiptUrl = donation.receiptUrl;
+        if (!currentReceiptUrl) {
+            this.logger.log(`No receiptUrl found for donation ${donationId} during resend. Uploading to Cloudinary...`);
+            const filename = `receipts/${donation.receiptNumber.replace(/\s+/g, '_')}_${donationId}.pdf`;
+            currentReceiptUrl = await this.storageService.uploadFile(pdfBuffer, filename, 'application/pdf', 'raw');
+            donation.receiptUrl = currentReceiptUrl;
+        }
+
+        // Resend email with attachment 
+        await this.sendReceiptEmail(donation, donation.receiptNumber, pdfBuffer, currentReceiptUrl)
+        
+        // Send WhatsApp receipt if phone exists
+        if (donation.donorPhone && currentReceiptUrl) {
             await this.notificationService.sendWhatsappReceipt(
                 donation.donorPhone,
-                donation.receiptUrl,
+                currentReceiptUrl,
                 donation.donorName,
                 donation.amount,
                 donation.category
             );
         }
 
-        // Update resend timestamp
+        // Update database
         await this.donationModel.findByIdAndUpdate(donationId, {
+            receiptUrl: currentReceiptUrl,
             receiptSentAt: new Date()
         })
 
