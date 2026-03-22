@@ -218,7 +218,9 @@ export class ReceiptService {
                     '--no-sandbox', 
                     '--disable-setuid-sandbox',
                     '--disable-dev-shm-usage',
-                    '--disable-gpu'
+                    '--disable-gpu',
+                    '--disable-software-rasterizer',
+                    '--no-zygote'
                 ]
             })
             const page = await browser.newPage()
