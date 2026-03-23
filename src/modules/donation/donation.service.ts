@@ -361,14 +361,19 @@ export class DonationService {
       {
         $lookup: {
           from: 'subscriptions',
-          let: { userId: '$user._id' },
+          let: { userId: '$user._id', donorEmail: '$email' },
           pipeline: [
             {
               $match: {
                 $expr: {
                   $and: [
-                    { $eq: ['$userId', { $toString: '$$userId' }] },
-                    { $eq: ['$status', 'active'] }
+                    { $eq: ['$status', 'active'] },
+                    {
+                      $or: [
+                        { $eq: ['$userId', { $toString: '$$userId' }] },
+                        { $eq: [{ $toLower: '$metadata.donorEmail' }, { $toLower: '$$donorEmail' }] }
+                      ]
+                    }
                   ]
                 }
               }
@@ -655,6 +660,11 @@ export class DonationService {
     const savedDonation = await donation.save();
 
     // Mock notification removed - Receipt is now handled by PaymentController/ReceiptService
+
+    // Immediately mark subscription as active
+    subscription.status = 'active';
+    subscription.razorpayStatus = 'active';
+    await subscription.save();
 
     return savedDonation;
   }
