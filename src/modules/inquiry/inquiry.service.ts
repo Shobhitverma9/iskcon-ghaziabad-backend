@@ -20,9 +20,14 @@ export class InquiryService {
         const inquiry = new this.inquiryModel(createInquiryDto)
         const savedInquiry = await inquiry.save()
 
-        // Check if the inquiry is for Bhagavad Gita Download
-        if (createInquiryDto.type && createInquiryDto.type.toUpperCase().includes('BHAGAVAD GITA')) {
-            this.sendGitaEmail(createInquiryDto)
+        // Check if the inquiry is for Bhagavad Gita Download (Support both spellings)
+        const isGitaInquiry = createInquiryDto.type && 
+            (createInquiryDto.type.toUpperCase().includes('BHAGAVAD GITA') || 
+             createInquiryDto.type.toUpperCase().includes('BHAGWAT GITA'));
+
+        if (isGitaInquiry) {
+            // Await gita email to catch potential errors if needed, though we catch internally
+            await this.sendGitaEmail(createInquiryDto)
         }
 
         // Notify Admin for all inquiries
@@ -88,7 +93,9 @@ export class InquiryService {
 
     private async sendGitaEmail(dto: CreateInquiryDto) {
         try {
-            const filePath = path.join(process.cwd(), '../public', 'bhagavad-gita-as-it-is.pdf');
+            // Updated path to look in the backend's own public folder (included in Docker image)
+            // Works in dev (backend/public) and prod (/app/public)
+            const filePath = path.join(process.cwd(), 'public', 'bhagavad-gita-as-it-is.pdf');
             if (fs.existsSync(filePath)) {
                 const fileBuffer = fs.readFileSync(filePath);
                 const base64File = fileBuffer.toString('base64');

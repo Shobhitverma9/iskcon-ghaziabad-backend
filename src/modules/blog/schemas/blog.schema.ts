@@ -20,6 +20,12 @@ export class BlogPost {
     @Prop({ required: true })
     title: string
 
+    @Prop()
+    heading?: string
+
+    @Prop()
+    subheading?: string
+
     @Prop({ required: true, unique: true, index: true })
     slug: string
 
@@ -52,6 +58,9 @@ export class BlogPost {
 
     @Prop([String])
     tags: string[]
+    
+    @Prop({ type: [Object] })
+    donations?: any[]
 }
 
 export const BlogPostSchema = SchemaFactory.createForClass(BlogPost)

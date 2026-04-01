@@ -57,4 +57,16 @@ export class CreateFestivalDto {
     @IsBoolean()
     @IsOptional()
     isActive?: boolean;
+
+    @IsString()
+    @IsOptional()
+    linkUrl?: string;
+
+    @IsString()
+    @IsOptional()
+    desktopImageUrl?: string;
+
+    @IsString()
+    @IsOptional()
+    mobileImageUrl?: string;
 }

@@ -74,6 +74,9 @@ export class User {
   @Prop()
   pincode?: string;
 
+  @Prop({ default: true })
+  isSubscribed: boolean;
+
   createdAt: Date;
   updatedAt: Date;
 }

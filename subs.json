@@ -1,0 +1,89 @@
+[
+  {
+    "_id": "69c0c51e6a8ff7d76678cd47",
+    "userId": "69bc22b60e46aee17b067a68",
+    "amount": 200,
+    "frequency": "monthly",
+    "status": "created",
+    "nextPaymentDate": "2026-03-23T04:44:14.487Z",
+    "category": "Guardian of Temple",
+    "isNityaSeva": false,
+    "metadata": {
+      "donorName": "Aniket Choudhary",
+      "donorEmail": "choudharyabhay870@gmail.com",
+      "donorPhone": "+918595136389",
+      "purpose": "",
+      "pan": ""
+    },
+    "razorpayPlanId": "plan_SUXVuKWrRhonJL",
+    "razorpaySubscriptionId": "sub_SUXVvkPpOEhFcU",
+    "createdAt": "2026-03-23T04:44:14.492Z",
+    "updatedAt": "2026-03-23T04:44:14.492Z",
+    "__v": 0
+  },
+  {
+    "_id": "69bfa11d7bdb51e14e0e2061",
+    "userId": "69bc22b60e46aee17b067a68",
+    "amount": 3000,
+    "frequency": "monthly",
+    "status": "created",
+    "nextPaymentDate": "2026-03-22T07:58:21.306Z",
+    "category": "Guardian of Temple",
+    "isNityaSeva": false,
+    "metadata": {
+      "donorName": "Surya Chakshu Das",
+      "donorEmail": "suryachakshudasgkg@gmail.com",
+      "donorPhone": "9870126712",
+      "purpose": "",
+      "pan": ""
+    },
+    "razorpayPlanId": "plan_SUCHpio4OBWgLV",
+    "razorpaySubscriptionId": "sub_SUCHrEqxCAU2of",
+    "createdAt": "2026-03-22T07:58:21.316Z",
+    "updatedAt": "2026-03-22T07:58:21.316Z",
+    "__v": 0
+  },
+  {
+    "_id": "69bf71117668b6ee352db79f",
+    "userId": "69bc22b60e46aee17b067a68",
+    "amount": 3000,
+    "frequency": "monthly",
+    "status": "created",
+    "nextPaymentDate": "2026-03-22T04:33:21.622Z",
+    "category": "Guardian of Temple",
+    "isNityaSeva": false,
+    "metadata": {
+      "donorName": "Sanidhya",
+      "donorEmail": "sanidhyadixit0048@gmail.com",
+      "donorPhone": "9953903761",
+      "purpose": "",
+      "pan": ""
+    },
+    "razorpayPlanId": "plan_SU8nHbQOVpgfC7",
+    "razorpaySubscriptionId": "sub_SU8nJL8ozKOa8d",
+    "createdAt": "2026-03-22T04:33:21.631Z",
+    "updatedAt": "2026-03-22T04:33:21.631Z",
+    "__v": 0
+  },
+  {
+    "_id": "69bd020ff77f22fb35102ae2",
+    "amount": 3000,
+    "frequency": "monthly",
+    "status": "created",
+    "nextPaymentDate": "2026-03-20T08:15:11.086Z",
+    "category": "Guardian of Temple",
+    "isNityaSeva": false,
+    "metadata": {
+      "donorName": "Suman Tiwari",
+      "donorEmail": "sumancaypt@gmail.com",
+      "donorPhone": "8588910062",
+      "purpose": "",
+      "pan": "CAYPT9883N"
+    },
+    "razorpayPlanId": "plan_STPVMxq7v8fotR",
+    "razorpaySubscriptionId": "sub_STPVORo6QTBlx2",
+    "createdAt": "2026-03-20T08:15:11.094Z",
+    "updatedAt": "2026-03-20T08:15:11.094Z",
+    "__v": 0
+  }
+]

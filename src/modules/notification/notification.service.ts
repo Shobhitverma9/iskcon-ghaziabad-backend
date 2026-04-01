@@ -7,22 +7,36 @@ import axios from 'axios';
 export class NotificationService {
     private readonly logger = new Logger(NotificationService.name);
     private postmarkClient: postmark.ServerClient;
+    private postmarkBroadcastClient: postmark.ServerClient;
     private readonly timespanelApiKey: string;
     private readonly timespanelBaseUrl: string;
     private readonly timespanelSenderNumber: string;
+    private readonly postmarkFrom: string;
+    private readonly postmarkBroadcastFrom: string;
 
     constructor(private configService: ConfigService) {
         const token = this.configService.get<string>('POSTMARK_API_TOKEN')?.trim();
         if (token) {
             this.postmarkClient = new postmark.ServerClient(token);
-            this.logger.log('✅ Postmark client initialized successfully');
+            this.logger.log('✅ Postmark transactional client initialized successfully');
         } else {
             this.logger.error('❌ POSTMARK_API_TOKEN not found in configuration. Email sending will fail.');
+        }
+
+        const broadcastToken = this.configService.get<string>('POSTMARK_BROADCAST_TOKEN')?.trim();
+        if (broadcastToken) {
+            this.postmarkBroadcastClient = new postmark.ServerClient(broadcastToken);
+            this.logger.log('✅ Postmark broadcast client initialized successfully');
+        } else {
+            this.logger.warn('⚠️ POSTMARK_BROADCAST_TOKEN not found. Broadcast email sending will fail.');
         }
 
         this.timespanelApiKey = this.configService.get<string>('TIMESPANEL_API_KEY')?.trim();
         this.timespanelBaseUrl = this.configService.get<string>('TIMESPANEL_BASE_URL')?.trim() || 'https://api.timespanel.com/v1/send';
         this.timespanelSenderNumber = this.configService.get<string>('TIMESPANEL_SENDER_NUMBER')?.trim() || '919217640062';
+
+        this.postmarkFrom = this.configService.get<string>('POSTMARK_FROM')?.trim() || 'info@iskconghaziabad.com';
+        this.postmarkBroadcastFrom = this.configService.get<string>('POSTMARK_BROADCAST_FROM')?.trim() || 'news@iskconghaziabad.com';
 
         if (!this.timespanelApiKey) {
             this.logger.warn('⚠️ TIMESPANEL_API_KEY not found. WhatsApp notifications will be mocked.');
@@ -39,7 +53,7 @@ export class NotificationService {
 
         try {
             await this.postmarkClient.sendEmail({
-                "From": "info@iskconghaziabad.com", // Ensure this sender is verified in Postmark
+                "From": this.postmarkFrom, // Ensure this sender is verified in Postmark
                 "To": to,
                 "Subject": subject,
                 "HtmlBody": htmlBody,
@@ -49,6 +63,85 @@ export class NotificationService {
             this.logger.log(`Email sent to ${to}`);
         } catch (error) {
             this.logger.error(`Failed to send email to ${to}`, error);
+            throw error;
+        }
+    }
+
+    async sendBroadcastEmail(to: string, subject: string, htmlBody: string, textBody?: string): Promise<void> {
+        if (!this.postmarkBroadcastClient) {
+            this.logger.error('Postmark Broadcast API token not found. Cannot send broadcast email.');
+            throw new Error('Postmark Broadcast API token not configured');
+        }
+
+        try {
+            await this.postmarkBroadcastClient.sendEmail({
+                "From": this.postmarkBroadcastFrom,
+                "To": to,
+                "Subject": subject,
+                "HtmlBody": htmlBody.replace(/{{Email}}/g, encodeURIComponent(to)),
+                "TextBody": textBody || "Please view this email in an HTML-compatible email client.",
+                "MessageStream": "broadcast",
+                "Headers": [
+                    {
+                        "Name": "List-Unsubscribe",
+                        "Value": `<https://iskconghaziabad.com/unsubscribe?email=${encodeURIComponent(to)}>`
+                    }
+                ]
+            });
+            this.logger.log(`Broadcast email sent to ${to}`);
+        } catch (error) {
+            this.logger.error(`Failed to send broadcast email to ${to}`, error);
+            throw error;
+        }
+    }
+
+    async sendBroadcastBatch(recipients: string[], subject: string, htmlBody: string): Promise<void> {
+        const transactionalToken = this.configService.get<string>('POSTMARK_API_TOKEN')?.trim();
+        const broadcastToken = this.configService.get<string>('POSTMARK_BROADCAST_TOKEN')?.trim() || transactionalToken;
+        
+        if (!broadcastToken) {
+            this.logger.error('Postmark API token not found. Cannot send broadcast batch.');
+            throw new Error('Postmark API token not configured');
+        }
+
+        // Prepare individual messages as a JSON array for the /batch API
+        const messages = recipients.map(email => ({
+            "From": this.postmarkBroadcastFrom || "Support <info@iskconghaziabad.com>",
+            "To": email,
+            "Subject": subject,
+            "HtmlBody": htmlBody.replace(/{{Email}}/g, encodeURIComponent(email)),
+            "TextBody": "Please view this email in an HTML-compatible email client.",
+            "MessageStream": "broadcast",
+            "Headers": [
+                {
+                    "Name": "List-Unsubscribe",
+                    "Value": `<https://iskconghaziabad.com/unsubscribe?email=${encodeURIComponent(email)}>`
+                }
+            ]
+        }));
+
+        try {
+            // Using axios directly for the standard /email/batch endpoint as per user guide
+            const response = await axios.post('https://api.postmarkapp.com/email/batch', messages, {
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Postmark-Server-Token': broadcastToken
+                }
+            });
+
+            // Inspect the results (Postmark returns an array of responses for each message)
+            const results = response.data;
+            const successCount = results.filter(r => r.ErrorCode === 0).length;
+            const errorCount = results.length - successCount;
+
+            this.logger.log(`Broadcast batch of ${recipients.length} messages: ${successCount} Success, ${errorCount} Errors`);
+            
+            if (errorCount > 0) {
+                this.logger.error(`Postmark Batch Errors: ${JSON.stringify(results.filter(r => r.ErrorCode !== 0).slice(0, 3), null, 2)}`);
+            }
+        } catch (error) {
+            this.logger.error(`Failed to send broadcast batch via /email/batch API`, error.response?.data || error.message);
             throw error;
         }
     }

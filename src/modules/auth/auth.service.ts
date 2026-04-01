@@ -305,4 +305,15 @@ export class AuthService {
             users: await this.userModel.find({}).select('email role').exec()
         };
     }
+
+    async unsubscribe(email: string) {
+        if (!email) throw new BadRequestException('Email is required');
+        const user = await this.userModel.findOneAndUpdate(
+            { email: email.toLowerCase() },
+            { isSubscribed: false },
+            { new: true }
+        );
+        this.logger.log(`User ${email} unsubscribed`);
+        return { message: 'You have been successfully unsubscribed from our mailing list.' };
+    }
 }

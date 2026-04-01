@@ -43,6 +43,15 @@ export class Festival {
 
     @Prop({ default: true })
     isActive: boolean;
+
+    @Prop()
+    linkUrl?: string;
+
+    @Prop()
+    desktopImageUrl?: string;
+
+    @Prop()
+    mobileImageUrl?: string;
 }
 
 export const FestivalSchema = SchemaFactory.createForClass(Festival);

@@ -75,15 +75,32 @@ export class EmailBroadcastService {
     let successCount = 0;
     let failureCount = 0;
 
-    for (const email of recipients) {
-      try {
-        await this.notificationService.sendEmail(email, template.subject, template.htmlBody);
-        successCount++;
-      } catch (error) {
-        this.logger.error(`Failed to send broadcast email to ${email}`, error);
-        failureCount++;
-      }
+    const chunkSize = 500;
+    const taskChunks: string[][] = [];
+    for (let i = 0; i < recipients.length; i += chunkSize) {
+      taskChunks.push(recipients.slice(i, i + chunkSize));
     }
+
+    const limit = 5;
+    let chunkIndex = 0;
+
+    const runWorker = async () => {
+      while (chunkIndex < taskChunks.length) {
+        const i = chunkIndex++;
+        const chunk = taskChunks[i];
+        try {
+          await this.notificationService.sendBroadcastBatch(chunk, template.subject, template.htmlBody);
+          successCount += chunk.length;
+        } catch (error) {
+          this.logger.error(`Failed to send broadcast batch at chunk ${i}`, error);
+          failureCount += chunk.length;
+        }
+      }
+    };
+
+    // Start workers
+    const workers = Array.from({ length: Math.min(limit, taskChunks.length) }, () => runWorker());
+    await Promise.all(workers);
 
     await this.broadcastModel.findByIdAndUpdate(broadcastId, {
       status: failureCount === recipients.length ? 'failed' : 'sent',

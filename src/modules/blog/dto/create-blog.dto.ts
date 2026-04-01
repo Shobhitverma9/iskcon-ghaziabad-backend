@@ -23,6 +23,14 @@ export class CreateBlogDto {
 
     @IsString()
     @IsOptional()
+    heading?: string;
+
+    @IsString()
+    @IsOptional()
+    subheading?: string;
+
+    @IsString()
+    @IsOptional()
     slug?: string;
 
     @IsNotEmpty()
@@ -54,4 +62,8 @@ export class CreateBlogDto {
     @IsOptional()
     @IsDateString()
     publishedAt?: Date;
+
+    @IsOptional()
+    @IsArray()
+    donations?: any[];
 }

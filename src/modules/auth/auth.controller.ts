@@ -124,4 +124,10 @@ export class AuthController {
     async getProfile(@Req() req) {
         return req.user;
     }
+
+    @Get('unsubscribe')
+    async unsubscribe(@Req() req: Request) {
+        const email = req.query.email as string;
+        return this.authService.unsubscribe(email);
+    }
 }

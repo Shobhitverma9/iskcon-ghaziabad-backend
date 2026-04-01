@@ -6,6 +6,10 @@ export class CreateLandingPageDto {
     title: string
 
     @IsString()
+    @IsOptional()
+    headerTitle?: string
+
+    @IsString()
     @IsNotEmpty()
     slug: string
 
@@ -17,14 +21,18 @@ export class CreateLandingPageDto {
     @IsNotEmpty()
     hero: {
         backgroundImage: string
+        mobileBackgroundImage?: string
+        title?: string
+        description?: string
         buttonText: string
         buttonScrollId?: string
+        buttonLink?: string
     }
 
     @IsArray()
     @IsOptional()
     sections?: {
-        type: 'stats' | 'content' | 'donation' | 'grid' | 'media' | 'custom_donation'
+        type: 'stats' | 'content' | 'donation' | 'grid' | 'media' | 'custom_donation' | 'pooja_offerings' | 'separator'
         content: any
     }[]
 }

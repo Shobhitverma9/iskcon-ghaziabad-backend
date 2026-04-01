@@ -11,12 +11,17 @@ export class LandingPage {
     @Prop({ required: true, unique: true })
     slug: string
 
+    @Prop({ required: false })
+    headerTitle?: string
+
     @Prop({ default: true })
     isActive: boolean
 
     @Prop({ type: Object })
     hero: {
         backgroundImage: string
+        mobileBackgroundImage?: string
+        title?: string
         description?: string
         buttonText: string
         buttonScrollId?: string
@@ -26,14 +31,14 @@ export class LandingPage {
     @Prop({
         type: [
             {
-                type: { type: String, required: true, enum: ['stats', 'content', 'donation', 'grid', 'media', 'custom_donation'] },
+                type: { type: String, required: true, enum: ['stats', 'content', 'donation', 'grid', 'media', 'custom_donation', 'pooja_offerings', 'separator'] },
                 content: { type: Object, required: true }, // Polymorphic content based on type
                 _id: false
             }
         ]
     })
     sections: {
-        type: 'stats' | 'content' | 'donation' | 'grid' | 'media' | 'custom_donation'
+        type: 'stats' | 'content' | 'donation' | 'grid' | 'media' | 'custom_donation' | 'pooja_offerings' | 'separator'
         content: any
     }[]
 }
