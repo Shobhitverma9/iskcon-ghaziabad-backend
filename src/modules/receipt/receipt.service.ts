@@ -501,21 +501,39 @@ ISKCON Ghaziabad Team
             this.logger.log(`✅ Uploaded to Cloudinary: ${receiptUrl}`)
 
             // Send email
-            this.logger.log(`📧 Sending email to ${donation.donorEmail}...`)
-            await this.sendReceiptEmail(donation, receiptNumber, pdfBuffer, receiptUrl)
-            this.logger.log(`✅ Email sent successfully`)
+            let emailDeliveryStatus = 'not_sent'
+            let emailDeliveryError = null
+            try {
+                this.logger.log(`📧 Sending email to ${donation.donorEmail}...`)
+                await this.sendReceiptEmail(donation, receiptNumber, pdfBuffer, receiptUrl)
+                this.logger.log(`✅ Email sent successfully`)
+                emailDeliveryStatus = 'sent'
+            } catch (error) {
+                this.logger.error(`❌ Email sending failed for donation ${donationId}: ${error.message}`)
+                emailDeliveryStatus = 'failed'
+                emailDeliveryError = error.message
+            }
 
             // Send WhatsApp Receipt Template
+            let whatsappDeliveryStatus = 'not_sent'
+            let whatsappDeliveryError = null
             if (donation.donorPhone) {
-                this.logger.log(`📱 Sending WhatsApp receipt template (receiptv4) to ${donation.donorPhone}...`)
-                await this.notificationService.sendWhatsappReceipt(
-                    donation.donorPhone,
-                    receiptUrl,
-                    donation.donorName,
-                    donation.amount,
-                    donation.category
-                )
-                this.logger.log(`✅ WhatsApp receipt template sent`)
+                try {
+                    this.logger.log(`📱 Sending WhatsApp receipt template (receiptv4) to ${donation.donorPhone}...`)
+                    await this.notificationService.sendWhatsappReceipt(
+                        donation.donorPhone,
+                        receiptUrl,
+                        donation.donorName,
+                        donation.amount,
+                        donation.category
+                    )
+                    this.logger.log(`✅ WhatsApp receipt template sent`)
+                    whatsappDeliveryStatus = 'sent'
+                } catch (error) {
+                    this.logger.error(`❌ WhatsApp sending failed for donation ${donationId}: ${error.message}`)
+                    whatsappDeliveryStatus = 'failed'
+                    whatsappDeliveryError = error.message
+                }
             }
 
             // Update donation record
@@ -523,7 +541,11 @@ ISKCON Ghaziabad Team
                 receiptNumber,
                 receiptUrl,
                 receiptGeneratedAt: donation.receiptGeneratedAt || new Date(),
-                receiptSentAt: new Date()
+                receiptSentAt: new Date(),
+                emailDeliveryStatus,
+                emailDeliveryError,
+                whatsappDeliveryStatus,
+                whatsappDeliveryError
             })
 
             this.logger.log(`✅ Receipt ${receiptNumber} process completed for donation ${donationId}`)
@@ -562,23 +584,45 @@ ISKCON Ghaziabad Team
         }
 
         // Resend email with attachment 
-        await this.sendReceiptEmail(donation, donation.receiptNumber, pdfBuffer, currentReceiptUrl)
+        let emailDeliveryStatus = 'not_sent'
+        let emailDeliveryError = null
+        try {
+            await this.sendReceiptEmail(donation, donation.receiptNumber, pdfBuffer, currentReceiptUrl)
+            emailDeliveryStatus = 'sent'
+        } catch (error) {
+            this.logger.error(`❌ Email resend failed for donation ${donationId}: ${error.message}`)
+            emailDeliveryStatus = 'failed'
+            emailDeliveryError = error.message
+        }
         
         // Send WhatsApp receipt if phone exists
+        let whatsappDeliveryStatus = 'not_sent'
+        let whatsappDeliveryError = null
         if (donation.donorPhone && currentReceiptUrl) {
-            await this.notificationService.sendWhatsappReceipt(
-                donation.donorPhone,
-                currentReceiptUrl,
-                donation.donorName,
-                donation.amount,
-                donation.category
-            );
+            try {
+                await this.notificationService.sendWhatsappReceipt(
+                    donation.donorPhone,
+                    currentReceiptUrl,
+                    donation.donorName,
+                    donation.amount,
+                    donation.category
+                );
+                whatsappDeliveryStatus = 'sent'
+            } catch (error) {
+                this.logger.error(`❌ WhatsApp resend failed for donation ${donationId}: ${error.message}`)
+                whatsappDeliveryStatus = 'failed'
+                whatsappDeliveryError = error.message
+            }
         }
 
         // Update database
         await this.donationModel.findByIdAndUpdate(donationId, {
             receiptUrl: currentReceiptUrl,
-            receiptSentAt: new Date()
+            receiptSentAt: new Date(),
+            emailDeliveryStatus,
+            emailDeliveryError,
+            whatsappDeliveryStatus,
+            whatsappDeliveryError
         })
 
         this.logger.log(`✅ Receipt ${donation.receiptNumber} resent for donation ${donationId}`)

@@ -31,28 +31,43 @@ export class DonationService {
     @Inject(ReceiptService) private readonly receiptService: ReceiptService,
   ) { }
 
-  async findAll(period?: string): Promise<Donation[]> {
-    const filter = this.getDateFilterForPeriod(period);
+  async findAll(period?: string, startDate?: string, endDate?: string): Promise<Donation[]> {
+    const filter = this.getDateFilterForPeriod(period, startDate, endDate);
     return this.donationModel.find(filter).sort({ createdAt: -1 }).exec()
   }
 
-  private getDateFilterForPeriod(period?: string): any {
+  private getDateFilterForPeriod(period?: string, startDate?: string, endDate?: string): any {
+    const filter: any = { status: "completed" };
+
+    if (startDate || endDate) {
+      const dateRange: any = {};
+      if (startDate) dateRange.$gte = new Date(startDate);
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        dateRange.$lte = end;
+      }
+      filter.createdAt = dateRange;
+      return filter;
+    }
+
     if (!period || period === 'all') {
-      return {};
+      return { status: "completed" };
     }
 
     const now = new Date();
-    let startDate: Date;
+    let start: Date;
 
     if (period === 'monthly') {
-      startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000); // Last 30 days
+      start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000); // Last 30 days
     } else if (period === 'yearly') {
-      startDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000); // Last 365 days
+      start = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000); // Last 365 days
     } else {
-      return {};
+      return { status: "completed" };
     }
 
-    return { createdAt: { $gte: startDate } };
+    filter.createdAt = { $gte: start };
+    return filter;
   }
 
   async create(createDonationDto: CreateDonationDto, ipAddress?: string): Promise<Donation> {
@@ -174,16 +189,18 @@ export class DonationService {
     return donation
   }
 
-  async getStats(): Promise<any> {
-    const cacheKey = "donation:stats"
+  async getStats(period?: string, startDate?: string, endDate?: string): Promise<any> {
+    const cacheKey = `donation:stats:${period || 'all'}:${startDate || 'na'}:${endDate || 'na'}`
     const cached = await this.cacheManager.get(cacheKey)
 
     if (cached) {
       return cached
     }
 
+    const filter = this.getDateFilterForPeriod(period, startDate, endDate);
+
     const stats = await this.donationModel.aggregate([
-      { $match: { status: "completed" } },
+      { $match: filter },
       {
         $group: {
           _id: null,
@@ -201,22 +218,14 @@ export class DonationService {
       },
     ])
 
-
-
-    // Get Active Now (Users active in last 1 hour + recent donations)
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
     const activeUsersCount = await this.userModel.countDocuments({ updatedAt: { $gte: oneHourAgo } });
-
-    // Also count recent donations as activity
     const recentDonationsCount = await this.donationModel.countDocuments({ createdAt: { $gte: oneHourAgo } });
 
     const result = stats[0] || { totalDonations: 0, totalDonors: 0, averageDonation: 0 }
-
-    // Add active count to result
     result.activeNow = activeUsersCount + recentDonationsCount;
 
-    await this.cacheManager.set(cacheKey, result, 60000) // 1 minute (shorter cache for live stats)
-
+    await this.cacheManager.set(cacheKey, result, 60000)
     return result
   }
 
@@ -325,9 +334,9 @@ export class DonationService {
     return result;
   }
 
-  async getDonorAnalytics(period?: string): Promise<any[]> {
-    const dateFilter = this.getDateFilterForPeriod(period);
-    const matchStage: any = { status: 'completed', ...dateFilter };
+  async getDonorAnalytics(period?: string, startDate?: string, endDate?: string): Promise<any[]> {
+    const dateFilter = this.getDateFilterForPeriod(period, startDate, endDate);
+    const matchStage: any = { ...dateFilter };
 
     return this.donationModel.aggregate([
       { $match: matchStage },

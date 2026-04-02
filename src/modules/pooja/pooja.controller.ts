@@ -62,6 +62,17 @@ export class PoojaController {
     return this.poojaService.findById(id);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Patch('bookings/:id/status')
+  async updateStatus(
+    @Param('id') id: string,
+    @Body('status') status: string,
+    @Body('metadata') metadata?: any
+  ) {
+    return this.poojaService.updateStatus(id, status, metadata);
+  }
+
   @Get('available-slots')
   async getAvailableSlots(@Query('date') date: string) {
     return this.poojaService.getAvailableSlots(new Date(date));

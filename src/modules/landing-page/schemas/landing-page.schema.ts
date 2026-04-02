@@ -22,10 +22,13 @@ export class LandingPage {
         backgroundImage: string
         mobileBackgroundImage?: string
         title?: string
+        subtitle?: string
         description?: string
         buttonText: string
         buttonScrollId?: string
         buttonLink?: string
+        showHareKrishnaBadge?: boolean
+        showSeparator?: boolean
     }
 
     @Prop({

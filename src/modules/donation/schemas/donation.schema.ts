@@ -103,6 +103,18 @@ export class Donation {
 
     @Prop()
     receiptUrl: string
+
+    @Prop({ default: 'not_sent', enum: ['not_sent', 'sent', 'failed'] })
+    emailDeliveryStatus: string
+
+    @Prop({ default: 'not_sent', enum: ['not_sent', 'sent', 'failed'] })
+    whatsappDeliveryStatus: string
+
+    @Prop()
+    emailDeliveryError: string
+
+    @Prop()
+    whatsappDeliveryError: string
 }
 
 export const DonationSchema = SchemaFactory.createForClass(Donation)

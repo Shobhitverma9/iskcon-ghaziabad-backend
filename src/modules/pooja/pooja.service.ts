@@ -29,6 +29,15 @@ export class PoojaService {
 
     await this.cacheManager.del("pooja:available-slots")
 
+    // Send WhatsApp notification for admin
+    const cleanPhone = createPoojaDto.devotePhone ? createPoojaDto.devotePhone.replace(/\D/g, '') : '';
+    const adminMsg = `New Pooja Booking Request\n\nDevotee: ${createPoojaDto.devoteeName}\nType: ${createPoojaDto.poojaType}\nDate: ${new Date(createPoojaDto.poojaDate).toLocaleDateString()}\nPhone: ${cleanPhone}\n\nPlease check the admin dashboard for approval.`;
+    
+    // Fire and forget
+    this.notificationService.sendWhatsapp('8588910062', adminMsg).catch(err => {
+      this.logger.error('Failed to send admin WhatsApp notification', err);
+    });
+
     // Note: Email notifications are sent after successful payment verification
     // in updatePoojaRazorpayDetails() method
 
@@ -84,7 +93,7 @@ export class PoojaService {
       return cached
     }
 
-    const pooja = await this.poojaModel.findById(id).lean().exec()
+    const pooja = await this.poojaModel.findById(id).populate('items').lean().exec()
 
     if (pooja) {
       await this.cacheManager.set(cacheKey, pooja, 3600000)
@@ -94,11 +103,11 @@ export class PoojaService {
   }
 
   async findByUser(userId: string): Promise<PoojaBooking[]> {
-    return this.poojaModel.find({ userId }).sort({ poojaDate: 1 }).lean().exec() as Promise<PoojaBooking[]>
+    return this.poojaModel.find({ userId }).populate('items').sort({ poojaDate: 1 }).lean().exec() as Promise<PoojaBooking[]>
   }
 
   async findAll(): Promise<PoojaBooking[]> {
-    return this.poojaModel.find().sort({ createdAt: -1 }).lean().exec() as Promise<PoojaBooking[]>
+    return this.poojaModel.find().populate('items').sort({ createdAt: -1 }).lean().exec() as Promise<PoojaBooking[]>
   }
 
   async reschedule(id: string, newDate: Date, userId: string): Promise<PoojaBooking | null> {
@@ -108,6 +117,29 @@ export class PoojaService {
     booking.poojaDate = newDate
     booking.status = "confirmed" // Reset to confirmed or keep as pending approval if needed
     return booking.save()
+  }
+
+  async updateStatus(id: string, status: string, metadata?: any): Promise<PoojaBooking | null> {
+    const booking = await this.poojaModel.findById(id);
+    if (!booking) return null;
+
+    booking.status = status;
+    
+    if (metadata) {
+        if (metadata.pendingReason !== undefined) {
+            booking.pendingReason = metadata.pendingReason;
+        }
+        if (metadata.zoomLink !== undefined) {
+            booking.metadata = { ...booking.metadata, zoomLink: metadata.zoomLink };
+        }
+    }
+
+    const savedBooking = await booking.save();
+    
+    // Clear cache
+    await this.cacheManager.del(`pooja:${id}`);
+    
+    return savedBooking;
   }
 
   async getAvailableSlots(date: Date): Promise<string[]> {

@@ -104,16 +104,16 @@ export class DonationController {
   }
 
   @Get("stats/overview")
-  async getStats() {
-    return this.donationService.getStats()
+  async getStats(@Query('period') period?: string, @Query('startDate') startDate?: string, @Query('endDate') endDate?: string) {
+    return this.donationService.getStats(period, startDate, endDate)
   }
 
   // Analytics - Specific routes first
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'volunteer')
   @Get("analytics/donors")
-  async getDonorAnalytics(@Query('period') period?: string) {
-    return this.donationService.getDonorAnalytics(period)
+  async getDonorAnalytics(@Query('period') period?: string, @Query('startDate') startDate?: string, @Query('endDate') endDate?: string) {
+    return this.donationService.getDonorAnalytics(period, startDate, endDate)
   }
 
   @Get('recent/:limit')
@@ -184,8 +184,8 @@ export class DonationController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'accounts')
   @Get('all')
-  async findAll(@Query('period') period?: string) {
-    return this.donationService.findAll(period);
+  async findAll(@Query('period') period?: string, @Query('startDate') startDate?: string, @Query('endDate') endDate?: string) {
+    return this.donationService.findAll(period, startDate, endDate);
   }
 
   @Get(':id')

@@ -21,7 +21,7 @@ export class ContactSettings {
     @Prop({ default: "info@iskconghaziabad.com" })
     email: string
 
-    @Prop({ default: "+91 93157 63868" })
+    @Prop({ default: "+91 85889 10062" })
     phone1: string
 
     @Prop({ default: "+91 81309 92863" })

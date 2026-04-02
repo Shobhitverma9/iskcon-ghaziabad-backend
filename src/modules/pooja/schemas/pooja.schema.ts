@@ -69,6 +69,9 @@ export class PoojaBooking {
     status: string
 
     @Prop()
+    pendingReason: string
+
+    @Prop()
     priestName: string
 
     @Prop({ type: Object })
@@ -82,6 +85,9 @@ export class PoojaBooking {
 
     @Prop()
     razorpaySignature: string
+
+    @Prop({ type: [{ type: String, ref: 'PujaItem' }] })
+    items: string[]
 }
 
 export const PoojaSchema = SchemaFactory.createForClass(PoojaBooking)
