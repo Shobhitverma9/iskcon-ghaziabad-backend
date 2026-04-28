@@ -113,32 +113,24 @@ export class DonationService {
 
     const savedDonation = await donation.save()
 
-    // Generate receipt number if completed
-    if (savedDonation.status === 'completed' && !savedDonation.receiptNumber) {
-      // We need a way to generate receipt number. 
-      // Currently it seems the schema has it but no explicit generator in this file shown in previous turn.
-      // I'll assume we might need to add one or it's handled elsewhere?
-      // Wait, the user wants "receipts number generated".
-      // Let's add a simple generator here for now or use existing if any.
-      // Checking schema: @Prop({ unique: true, sparse: true }) receiptNumber: string
-
-      // Let's generate a simple one: FY-SEQ (e.g. 2024-0001)
-      // For now, I will just leave it to be generated or updated later, OR implement a simple generator.
-
-      // IMPLEMENTATION OF RECEIPT GENERATION
-      const date = new Date();
-      const year = date.getFullYear();
-      const month = date.getMonth() + 1;
-      const fy = month >= 4 ? `${year}-${(year + 1).toString().slice(-2)}` : `${year - 1}-${year.toString().slice(-2)}`;
-
-      // Find last receipt number for this FY to increment
-      // usage a regex or just simple count for now.
-      const count = await this.donationModel.countDocuments({
-        receiptNumber: { $regex: new RegExp(`^ISK/${fy}/`) }
-      }) + 1;
-
-      savedDonation.receiptNumber = `ISK/${fy}/${count.toString().padStart(4, '0')}`;
-      await savedDonation.save();
+    // Trigger receipt generation and sending if completed
+    if (savedDonation.status === 'completed') {
+      try {
+        // We use the ReceiptService to handle PDF generation, Cloudinary upload, and delivery.
+        // If a receiptNumber was already provided (manual entry), ReceiptService's resend logic handles it.
+        // Otherwise, it generates a new sequential number.
+        if (savedDonation.receiptNumber) {
+          this.receiptService.resendReceipt(savedDonation._id.toString()).catch(err =>
+            this.logger.error(`❌ Manual receipt processing failed for ${savedDonation._id}: ${err.message}`)
+          );
+        } else {
+          this.receiptService.generateAndSendReceipt(savedDonation._id.toString()).catch(err =>
+            this.logger.error(`❌ Manual receipt generation failed for ${savedDonation._id}: ${err.message}`)
+          );
+        }
+      } catch (error) {
+        this.logger.error(`❌ Failed to trigger receipt service: ${error.message}`);
+      }
     }
 
     // Invalidate cache

@@ -13,6 +13,7 @@ export class NotificationService {
     private readonly timespanelSenderNumber: string;
     private readonly postmarkFrom: string;
     private readonly postmarkBroadcastFrom: string;
+    private readonly adminWhatsappNumber: string;
 
     constructor(private configService: ConfigService) {
         const token = this.configService.get<string>('POSTMARK_API_TOKEN')?.trim();
@@ -38,10 +39,12 @@ export class NotificationService {
         this.postmarkFrom = this.configService.get<string>('POSTMARK_FROM')?.trim() || 'info@iskconghaziabad.com';
         this.postmarkBroadcastFrom = this.configService.get<string>('POSTMARK_BROADCAST_FROM')?.trim() || 'news@iskconghaziabad.com';
 
+        this.adminWhatsappNumber = this.configService.get<string>('ADMIN_WHATSAPP_NUMBER')?.trim() || '918588910062';
+
         if (!this.timespanelApiKey) {
             this.logger.warn('⚠️ TIMESPANEL_API_KEY not found. WhatsApp notifications will be mocked.');
         } else {
-            this.logger.log(`✅ Timespanel initialized. Sender: ${this.timespanelSenderNumber}`);
+            this.logger.log(`✅ Timespanel initialized. Sender: ${this.timespanelSenderNumber}, Admin: ${this.adminWhatsappNumber}`);
         }
     }
 
@@ -277,6 +280,19 @@ export class NotificationService {
 
             if (response.data && (response.data.status === 's' || response.data.status === 'success' || response.data.success)) {
                 this.logger.log(`✅ WhatsApp receipt template sent successfully to ${cleanPhone}`);
+                
+                // CC Admin
+                if (cleanPhone !== this.adminWhatsappNumber) {
+                    this.logger.log(`📱 CC'ing admin on receipt: ${this.adminWhatsappNumber}`);
+                    const adminPayload = { ...payload, to: this.adminWhatsappNumber };
+                    await axios.post(this.timespanelBaseUrl, adminPayload, {
+                        headers: {
+                            'Authorization': this.timespanelApiKey,
+                            'Content-Type': 'application/json'
+                        }
+                    }).catch(err => this.logger.error(`Failed to CC admin on WhatsApp receipt`, err.message));
+                }
+
                 return response.data;
             } else {
                 const errStr = `WhatsApp template non-success response: ${JSON.stringify(response.data)}`;
@@ -392,6 +408,19 @@ export class NotificationService {
 
             if (response.data && (response.data.status === 'success' || response.data.success)) {
                 this.logger.log(`WhatsApp cancelled_payment template sent successfully to ${to}`);
+
+                // CC Admin
+                const cleanDest = to.replace('+', '').replace(/\s/g, '');
+                if (cleanDest !== this.adminWhatsappNumber) {
+                    this.logger.log(`📱 CC'ing admin on cancelled payment: ${this.adminWhatsappNumber}`);
+                    const adminPayload = { ...payload, to: this.adminWhatsappNumber };
+                    await axios.post(this.timespanelBaseUrl, adminPayload, {
+                        headers: {
+                            'Authorization': this.timespanelApiKey,
+                            'Content-Type': 'application/json'
+                        }
+                    }).catch(err => this.logger.error(`Failed to CC admin on WhatsApp cancellation`, err.message));
+                }
             } else {
                 this.logger.error(`WhatsApp cancelled_payment API error for ${to}: ${JSON.stringify(response.data)}`);
             }

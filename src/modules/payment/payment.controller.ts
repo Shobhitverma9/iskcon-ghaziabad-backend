@@ -467,7 +467,7 @@ export class PaymentController {
                 }
 
                 // 3. Admin plain text alert
-                const adminPhone = '919217640062';
+                const adminPhone = (this.notificationService as any).adminWhatsappNumber || '918588910062';
                 const adminMsg = `🚨 *Payment Alert*: Donation failed!\nDonor: ${donorName}\nAmount: ₹${amount}\nCategory: ${category}\nPhone: ${donorPhone || 'N/A'}\nError: ${payment.error_description || 'Unknown error'}`;
                 await this.notificationService.sendWhatsapp(adminPhone, adminMsg).catch(err =>
                     this.logger.error(`Failed to send payment failure WhatsApp to admin`, err)

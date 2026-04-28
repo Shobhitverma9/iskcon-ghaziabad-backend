@@ -34,7 +34,8 @@ export class PoojaService {
     const adminMsg = `New Pooja Booking Request\n\nDevotee: ${createPoojaDto.devoteeName}\nType: ${createPoojaDto.poojaType}\nDate: ${new Date(createPoojaDto.poojaDate).toLocaleDateString()}\nPhone: ${cleanPhone}\n\nPlease check the admin dashboard for approval.`;
     
     // Fire and forget
-    this.notificationService.sendWhatsapp('8588910062', adminMsg).catch(err => {
+    const adminPhone = (this.notificationService as any).adminWhatsappNumber || '918588910062';
+    this.notificationService.sendWhatsapp(adminPhone, adminMsg).catch(err => {
       this.logger.error('Failed to send admin WhatsApp notification', err);
     });
 
@@ -82,6 +83,14 @@ export class PoojaService {
         : `Hare Krishna! Your pooja booking is confirmed. Receipt sent to email. Amount: Rs. ${booking.amount}`;
 
       await this.notificationService.sendWhatsapp(booking.devotePhone, msg);
+      
+      // CC Admin
+      const adminPhone = (this.notificationService as any).adminWhatsappNumber || '918588910062';
+      if (booking.devotePhone.replace(/\D/g, '') !== adminPhone.replace(/\D/g, '')) {
+        await this.notificationService.sendWhatsapp(adminPhone, `[ADMIN CC] ${msg}`).catch(err => 
+          this.logger.error('Failed to CC admin on pooja confirmation', err)
+        );
+      }
     }
   }
 

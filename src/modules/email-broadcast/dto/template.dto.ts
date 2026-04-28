@@ -13,7 +13,6 @@ export class CreateEmailTemplateDto {
   @IsNotEmpty()
   htmlBody: string;
 
-  @IsObject()
   @IsOptional()
   design?: any;
 }
@@ -31,7 +30,6 @@ export class UpdateEmailTemplateDto {
   @IsOptional()
   htmlBody?: string;
 
-  @IsObject()
   @IsOptional()
   design?: any;
 }
