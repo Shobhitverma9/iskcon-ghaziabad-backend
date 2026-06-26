@@ -36,10 +36,17 @@ export class NotificationService {
         this.timespanelBaseUrl = this.configService.get<string>('TIMESPANEL_BASE_URL')?.trim() || 'https://api.timespanel.com/v1/send';
         this.timespanelSenderNumber = this.configService.get<string>('TIMESPANEL_SENDER_NUMBER')?.trim() || '919217640062';
 
-        this.postmarkFrom = this.configService.get<string>('POSTMARK_FROM')?.trim() || 'info@iskconghaziabad.com';
-        this.postmarkBroadcastFrom = this.configService.get<string>('POSTMARK_BROADCAST_FROM')?.trim() || 'news@iskconghaziabad.com';
+        this.postmarkFrom = this.configService.get<string>('POSTMARK_FROM')?.trim() || 
+                           this.configService.get<string>('POSTMARK_FROM_EMAIL')?.trim() || 
+                           'info@iskconghaziabad.com';
+        
+        this.postmarkBroadcastFrom = this.configService.get<string>('POSTMARK_BROADCAST_FROM')?.trim() || 
+                                     this.configService.get<string>('POSTMARK_BROADCAST_FROM_EMAIL')?.trim() || 
+                                     'news@iskconghaziabad.com';
 
         this.adminWhatsappNumber = this.configService.get<string>('ADMIN_WHATSAPP_NUMBER')?.trim() || '918588910062';
+
+        this.logger.log(`📧 Email configured. From: ${this.postmarkFrom}, Broadcast: ${this.postmarkBroadcastFrom}`);
 
         if (!this.timespanelApiKey) {
             this.logger.warn('⚠️ TIMESPANEL_API_KEY not found. WhatsApp notifications will be mocked.');
@@ -55,17 +62,21 @@ export class NotificationService {
         }
 
         try {
+            this.logger.debug(`Attempting to send email to ${to} with subject: ${subject}`);
             await this.postmarkClient.sendEmail({
-                "From": this.postmarkFrom, // Ensure this sender is verified in Postmark
+                "From": this.postmarkFrom,
                 "To": to,
                 "Subject": subject,
                 "HtmlBody": htmlBody,
                 "TextBody": textBody || "Please view this email in an HTML-compatible email client.",
                 "Attachments": attachments
             });
-            this.logger.log(`Email sent to ${to}`);
+            this.logger.log(`✅ Email sent successfully to ${to}`);
         } catch (error) {
-            this.logger.error(`Failed to send email to ${to}`, error);
+            this.logger.error(`❌ Failed to send email to ${to}. Error: ${error.message}`, error.stack);
+            if (error.code === 422) {
+                this.logger.error(`Postmark 422 Error: This usually means the 'From' address (${this.postmarkFrom}) is not verified in your Postmark account.`);
+            }
             throw error;
         }
     }
@@ -209,7 +220,8 @@ export class NotificationService {
         receiptUrl: string,
         donorName: string,
         amount: number,
-        category: string
+        category: string,
+        skipCC: boolean = false
     ): Promise<void> {
         if (!this.timespanelApiKey) {
             this.logger.log(`[MOCK] Sending WhatsApp Receipt to ${to}: ${receiptUrl}`);
@@ -282,7 +294,7 @@ export class NotificationService {
                 this.logger.log(`✅ WhatsApp receipt template sent successfully to ${cleanPhone}`);
                 
                 // CC Admin
-                if (cleanPhone !== this.adminWhatsappNumber) {
+                if (!skipCC && cleanPhone !== this.adminWhatsappNumber) {
                     this.logger.log(`📱 CC'ing admin on receipt: ${this.adminWhatsappNumber}`);
                     const adminPayload = { ...payload, to: this.adminWhatsappNumber };
                     await axios.post(this.timespanelBaseUrl, adminPayload, {

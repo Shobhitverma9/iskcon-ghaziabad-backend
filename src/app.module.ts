@@ -30,6 +30,7 @@ import { AppController } from "./app.controller"
 import { BannersModule } from "./modules/banners/banners.module"
 import { ReceiptModule } from "./modules/receipt/receipt.module"
 import { EmailBroadcastModule } from "./modules/email-broadcast/email-broadcast.module"
+import { YatraModule } from "./modules/yatra/yatra.module"
 
 @Module({
   imports: [
@@ -74,6 +75,7 @@ import { EmailBroadcastModule } from "./modules/email-broadcast/email-broadcast.
     ReceiptModule,
     EmailBroadcastModule,
     PaymentModule,
+    YatraModule,
   ],
   providers: [
     {

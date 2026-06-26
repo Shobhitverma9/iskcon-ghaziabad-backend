@@ -18,8 +18,9 @@ export class CreateDonationDto {
   @Min(1)
   amount: number
 
+  @IsOptional()
   @IsNumber()
-  fundId: number
+  fundId?: number
 
   @IsOptional()
   @IsString()
@@ -58,7 +59,23 @@ export class CreateDonationDto {
   transactionId?: string
 
   @IsOptional()
+  @IsString()
+  razorpayOrderId?: string
+
+  @IsOptional()
+  @IsString()
+  receiptNumber?: string
+
+  @IsOptional()
+  @IsString()
+  paymentStatus?: string
+
+  @IsOptional()
   createdAt?: string
+
+  @IsOptional()
+  @IsString()
+  paymentMode?: string
 
   @IsOptional()
   @IsObject()

@@ -31,7 +31,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
       statusCode: httpStatus,
       timestamp: new Date().toISOString(),
       path: httpAdapter.getRequestUrl(ctx.getRequest()),
-      message: (exception as any)?.message || 'Internal server error',
+      message: exception instanceof HttpException 
+        ? (exception.getResponse() as any).message || exception.message 
+        : (exception as any)?.message || 'Internal server error',
     };
 
     this.logger.error(

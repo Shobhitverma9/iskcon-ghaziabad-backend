@@ -115,6 +115,9 @@ export class Donation {
 
     @Prop()
     whatsappDeliveryError: string
+
+    @Prop({ default: 'UPI' })
+    paymentMode: string
 }
 
 export const DonationSchema = SchemaFactory.createForClass(Donation)

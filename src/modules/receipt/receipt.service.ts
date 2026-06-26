@@ -119,7 +119,11 @@ export class ReceiptService implements OnModuleDestroy { // Implemented OnModule
     /**
      * Get payment method text from numeric code
      */
-    private getPaymentMethodText(method: number): string {
+    private getPaymentMethodText(method: number | string): string {
+        if (typeof method === 'string') {
+            return method; // Already a string like 'Cash' or 'UPI'
+        }
+
         const methods: { [key: number]: string } = {
             1: 'Upi',
             2: 'Cheque',
@@ -135,12 +139,12 @@ export class ReceiptService implements OnModuleDestroy { // Implemented OnModule
     /**
      * Convert number to words (Indian numbering system)
      */
-    private numberToWords(num: number): string {
+    private convertNumberCore(num: number): string {
         const ones = ['', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE']
         const tens = ['', '', 'TWENTY', 'THIRTY', 'FORTY', 'FIFTY', 'SIXTY', 'SEVENTY', 'EIGHTY', 'NINETY']
         const teens = ['TEN', 'ELEVEN', 'TWELVE', 'THIRTEEN', 'FOURTEEN', 'FIFTEEN', 'SIXTEEN', 'SEVENTEEN', 'EIGHTEEN', 'NINETEEN']
 
-        if (num === 0) return 'ZERO'
+        if (num === 0) return ''
 
         const crore = Math.floor(num / 10000000)
         const lakh = Math.floor((num % 10000000) / 100000)
@@ -151,13 +155,13 @@ export class ReceiptService implements OnModuleDestroy { // Implemented OnModule
         let words = ''
 
         if (crore > 0) {
-            words += this.numberToWords(crore) + ' CRORE '
+            words += this.convertNumberCore(crore) + ' CRORE '
         }
         if (lakh > 0) {
-            words += this.numberToWords(lakh) + ' LAKH '
+            words += this.convertNumberCore(lakh) + ' LAKH '
         }
         if (thousand > 0) {
-            words += this.numberToWords(thousand) + ' THOUSAND '
+            words += this.convertNumberCore(thousand) + ' THOUSAND '
         }
         if (hundred > 0) {
             words += ones[hundred] + ' HUNDRED '
@@ -174,7 +178,12 @@ export class ReceiptService implements OnModuleDestroy { // Implemented OnModule
             words += ones[remainder] + ' '
         }
 
-        return words.trim() + ' RUPEES'
+        return words.trim()
+    }
+
+    private numberToWords(num: number): string {
+        if (num === 0) return 'ZERO RUPEES'
+        return this.convertNumberCore(num) + ' RUPEES ONLY'
     }
 
     /**
@@ -184,9 +193,7 @@ export class ReceiptService implements OnModuleDestroy { // Implemented OnModule
         if (!paymentId) {
             return 'N/A'
         }
-        // User requested extraction, but if they want full ID we can return paymentId
-        // Returning last 4 digits as per request/standard
-        return paymentId.length >= 4 ? paymentId.slice(-4) : paymentId
+        return paymentId
     }
 
     /**
@@ -194,7 +201,8 @@ export class ReceiptService implements OnModuleDestroy { // Implemented OnModule
      */
     private mapDonationToReceiptData(donation: Donation, receiptNumber: string): ReceiptData {
         // Determine payment method (default to UPI if captured via Razorpay)
-        const paymentMethod = donation.metadata?.paymentMethod || 1 // Default to UPI
+        // If it's a manual donation, use paymentMode field
+        const paymentMethod = (donation as any).paymentMode || donation.metadata?.paymentMethod || 1 // Default to UPI
 
         return {
             id: receiptNumber.split(' ')[1] || '00000', // Extract just the number part
@@ -212,7 +220,7 @@ export class ReceiptService implements OnModuleDestroy { // Implemented OnModule
             mobileNo: donation.donorPhone,
             email: donation.donorEmail,
             paymentMethod,
-            transactionDetails: this.extractTransactionDetails(donation.razorpayPaymentId),
+            transactionDetails: donation.transactionId || this.extractTransactionDetails(donation.razorpayPaymentId),
             purposeId: donation.category || 'GENERAL',
             user: donation.metadata?.processedBy || 'System'
         }

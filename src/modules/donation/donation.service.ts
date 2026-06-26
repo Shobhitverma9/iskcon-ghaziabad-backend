@@ -97,14 +97,15 @@ export class DonationService {
   }
 
   async createManual(createDonationDto: CreateDonationDto, userId: string): Promise<Donation> {
+    this.logger.log(`📝 Creating manual donation for ${createDonationDto.donorName} (${createDonationDto.amount} Rs)`);
+    
     const donation = new this.donationModel({
       ...createDonationDto,
-      userId: createDonationDto.userId || userId, // Use provided userId or creator's id (though usually manual donations are for others)
-      // If we are recording a donation for someone else, we might not have their userId.
-      // So userId here is likely the admin who created it? No, usually userId links to donor.
-      // If donor is not in system, userId is null.
-      status: createDonationDto.status || 'completed', // Default to completed for manual entry
+      userId: createDonationDto.userId || userId,
+      status: createDonationDto.status || 'completed',
       paymentMethod: 'manual',
+      paymentMode: createDonationDto.paymentMode || 'Cash', // Default to Cash for manual if not specified
+      transactionId: createDonationDto.transactionId || `MANUAL-${Date.now()}`
     })
 
     if (createDonationDto.createdAt) {
@@ -112,19 +113,24 @@ export class DonationService {
     }
 
     const savedDonation = await donation.save()
+    this.logger.log(`✅ Manual donation saved with ID: ${savedDonation._id}`);
 
     // Trigger receipt generation and sending if completed
     if (savedDonation.status === 'completed') {
       try {
-        // We use the ReceiptService to handle PDF generation, Cloudinary upload, and delivery.
-        // If a receiptNumber was already provided (manual entry), ReceiptService's resend logic handles it.
-        // Otherwise, it generates a new sequential number.
+        this.logger.log(`🚀 Triggering receipt service for manual donation ${savedDonation._id}...`);
         if (savedDonation.receiptNumber) {
-          this.receiptService.resendReceipt(savedDonation._id.toString()).catch(err =>
+          this.logger.log(`🔄 Using existing receipt number: ${savedDonation.receiptNumber}`);
+          this.receiptService.resendReceipt(savedDonation._id.toString()).then(() => {
+            this.logger.log(`✅ Manual receipt resend successful for ${savedDonation._id}`);
+          }).catch(err =>
             this.logger.error(`❌ Manual receipt processing failed for ${savedDonation._id}: ${err.message}`)
           );
         } else {
-          this.receiptService.generateAndSendReceipt(savedDonation._id.toString()).catch(err =>
+          this.logger.log(`🆕 Generating new receipt for ${savedDonation._id}`);
+          this.receiptService.generateAndSendReceipt(savedDonation._id.toString()).then(() => {
+            this.logger.log(`✅ Manual receipt generation successful for ${savedDonation._id}`);
+          }).catch(err =>
             this.logger.error(`❌ Manual receipt generation failed for ${savedDonation._id}: ${err.message}`)
           );
         }
@@ -410,6 +416,14 @@ export class DonationService {
     await this.cacheManager.set(cacheKey, donations, 1800000) // 30 mins
 
     return donations
+  }
+
+  async findAllPendingWithOrderId(startDate: Date, endDate: Date): Promise<DonationDocument[]> {
+    return this.donationModel.find({
+      status: 'pending',
+      razorpayOrderId: { $exists: true, $ne: '' },
+      createdAt: { $gte: startDate, $lte: endDate }
+    }).exec();
   }
 
   async getTopDonors(limit = 20): Promise<any[]> {

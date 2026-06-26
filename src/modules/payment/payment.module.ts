@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { forwardRef, Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { MongooseModule } from '@nestjs/mongoose'
 import { PaymentService } from './payment.service'
@@ -7,7 +7,8 @@ import { DonationModule } from '../donation/donation.module'
 import { PoojaModule } from '../pooja/pooja.module'
 import { ReceiptModule } from '../receipt/receipt.module'
 import { NotificationModule } from '../notification/notification.module'
-
+import { YatraModule } from '../yatra/yatra.module'
+import { PaymentCronService } from './payment-cron.service'
 
 @Module({
     imports: [
@@ -16,9 +17,10 @@ import { NotificationModule } from '../notification/notification.module'
         PoojaModule, // Import to access PoojaService
         ReceiptModule, // Import to access ReceiptService
         NotificationModule,
+        forwardRef(() => YatraModule),
     ],
     controllers: [PaymentController],
-    providers: [PaymentService],
+    providers: [PaymentService, PaymentCronService],
     exports: [PaymentService], // Export so other modules can use it
 })
 export class PaymentModule { }

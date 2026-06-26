@@ -13,6 +13,7 @@ import { DonationService } from '../donation/donation.service'
 import { PoojaService } from '../pooja/pooja.service'
 import { ReceiptService } from '../receipt/receipt.service'
 import { NotificationService } from '../notification/notification.service'
+import { YatraService } from '../yatra/yatra.service'
 import { ConfigService } from '@nestjs/config'
 import {
     CreateOrderDto,
@@ -33,6 +34,7 @@ export class PaymentController {
         private readonly poojaService: PoojaService,
         private readonly receiptService: ReceiptService,
         private readonly notificationService: NotificationService,
+        private readonly yatraService: YatraService,
     ) { }
 
 
@@ -157,6 +159,14 @@ export class PaymentController {
                     verifyPaymentDto.razorpaySignature,
                     'captured'
                 )
+            } else if (verifyPaymentDto.bookingId) {
+                // Update yatra booking with Razorpay details
+                await (this.yatraService as any).verifyPayment({
+                    bookingId: verifyPaymentDto.bookingId,
+                    razorpayOrderId: verifyPaymentDto.razorpayOrderId,
+                    razorpayPaymentId: verifyPaymentDto.razorpayPaymentId,
+                    razorpaySignature: verifyPaymentDto.razorpaySignature,
+                })
             }
 
 

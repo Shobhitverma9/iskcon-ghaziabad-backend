@@ -296,6 +296,19 @@ export class PaymentService {
     }
 
     /**
+     * Fetch all payments for an order
+     */
+    async fetchPaymentsForOrder(orderId: string): Promise<any> {
+        try {
+            const payments = await this.razorpay.orders.fetchPayments(orderId)
+            return payments
+        } catch (error) {
+            this.logger.error(`Failed to fetch payments for order: ${orderId}`, error)
+            throw new BadRequestException('Failed to fetch order payments')
+        }
+    }
+
+    /**
      * Fetch subscription details
      */
     async fetchSubscription(subscriptionId: string): Promise<any> {

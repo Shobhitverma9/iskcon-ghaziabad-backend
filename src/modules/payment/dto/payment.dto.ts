@@ -39,6 +39,10 @@ export class VerifyPaymentDto {
     @IsString()
     @IsOptional()
     poojaId?: string
+
+    @IsString()
+    @IsOptional()
+    bookingId?: string
 }
 
 export class CreateCustomerDto {

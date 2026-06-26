@@ -20,14 +20,17 @@ export class InquiryService {
         const inquiry = new this.inquiryModel(createInquiryDto)
         const savedInquiry = await inquiry.save()
 
-        // Check if the inquiry is for Bhagavad Gita Download (Support both spellings)
-        const isGitaInquiry = createInquiryDto.type && 
-            (createInquiryDto.type.toUpperCase().includes('BHAGAVAD GITA') || 
-             createInquiryDto.type.toUpperCase().includes('BHAGWAT GITA'));
+        // Check if the inquiry is for Bhagavad Gita Download (Support multiple spellings and variations)
+        const typeStr = (createInquiryDto.type || '').toUpperCase();
+        const isGitaInquiry = typeStr.includes('GITA') && 
+            (typeStr.includes('BHAGAVAD') || typeStr.includes('BHAGWAT') || typeStr.includes('BHAGWAD') || typeStr.includes('DOWNLOAD'));
 
         if (isGitaInquiry) {
+            this.logger.log(`🎯 Gita Inquiry detected: "${createInquiryDto.type}". Preparing to send email to ${createInquiryDto.email}`);
             // Await gita email to catch potential errors if needed, though we catch internally
             await this.sendGitaEmail(createInquiryDto)
+        } else {
+            this.logger.debug(`Inquiry type "${createInquiryDto.type}" did not match Gita criteria.`);
         }
 
         // Notify Admin for all inquiries
@@ -96,8 +99,11 @@ export class InquiryService {
             // Updated path to look in the backend's own public folder (included in Docker image)
             // Works in dev (backend/public) and prod (/app/public)
             const filePath = path.join(process.cwd(), 'public', 'bhagavad-gita-as-it-is.pdf');
+            this.logger.debug(`Checking for Gita PDF at: ${filePath}`);
+
             if (fs.existsSync(filePath)) {
-                const fileBuffer = fs.readFileSync(filePath);
+                this.logger.log(`📄 Found Gita PDF. Reading and attaching...`);
+                const fileBuffer = await fs.promises.readFile(filePath);
                 const base64File = fileBuffer.toString('base64');
 
                 const subject = "Your Free Bhagavad Gita As It Is - ISKCON Ghaziabad";
@@ -136,10 +142,10 @@ export class InquiryService {
                     }]
                 );
             } else {
-                this.logger.warn(`Bhagavad Gita PDF not found at: ${filePath}`);
+                this.logger.warn(`⚠️ Bhagavad Gita PDF not found at: ${filePath}. Current working directory: ${process.cwd()}`);
             }
         } catch (error) {
-            this.logger.error('Error sending Bhagavad Gita email:', error);
+            this.logger.error(`❌ Error in sendGitaEmail for ${dto.email}: ${error.message}`, error.stack);
         }
     }
 
