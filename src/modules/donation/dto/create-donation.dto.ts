@@ -80,8 +80,4 @@ export class CreateDonationDto {
   @IsOptional()
   @IsObject()
   metadata?: Record<string, any>
-
-  @IsOptional()
-  @IsString()
-  razorpayOrderId?: string
 }
