@@ -398,11 +398,11 @@ export class NotificationService {
                                 { type: "text", text: donorName },
                                 { type: "text", text: `${amount} rs` },
                                 { type: "text", text: category || "Donation" },
-                                { type: "text", text: donationPageUrl },
+                                { type: "text", text: "https://iskconghaziabad.com/donation" },
                                 { type: "text", text: donorName },
                                 { type: "text", text: category || "Donation" },
                                 { type: "text", text: `${amount} rs` },
-                                { type: "text", text: donationPageUrl }
+                                { type: "text", text: "https://iskconghaziabad.com/donation" }
                             ]
                         }
                     ]
