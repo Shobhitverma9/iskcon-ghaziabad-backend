@@ -35,7 +35,8 @@ export class CreateLandingPageDto {
     @IsArray()
     @IsOptional()
     sections?: {
-        type: 'stats' | 'content' | 'donation' | 'grid' | 'media' | 'custom_donation' | 'pooja_offerings' | 'separator' | 'pricing_tiers'
+        type: 'stats' | 'content' | 'donation' | 'grid' | 'media' | 'custom_donation' | 'pooja_offerings' | 'separator' | 'pricing_tiers' | 'card_grid'
+        id?: string
         content: any
     }[]
 }

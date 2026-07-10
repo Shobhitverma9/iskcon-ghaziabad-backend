@@ -34,14 +34,16 @@ export class LandingPage {
     @Prop({
         type: [
             {
-                type: { type: String, required: true, enum: ['stats', 'content', 'donation', 'grid', 'media', 'custom_donation', 'pooja_offerings', 'separator', 'pricing_tiers'] },
+                type: { type: String, required: true, enum: ['stats', 'content', 'donation', 'grid', 'media', 'custom_donation', 'pooja_offerings', 'separator', 'pricing_tiers', 'card_grid'] },
+                id: { type: String, required: false },
                 content: { type: Object, required: true }, // Polymorphic content based on type
                 _id: false
             }
         ]
     })
     sections: {
-        type: 'stats' | 'content' | 'donation' | 'grid' | 'media' | 'custom_donation' | 'pooja_offerings' | 'separator' | 'pricing_tiers'
+        type: 'stats' | 'content' | 'donation' | 'grid' | 'media' | 'custom_donation' | 'pooja_offerings' | 'separator' | 'pricing_tiers' | 'card_grid'
+        id?: string
         content: any
     }[]
 }
