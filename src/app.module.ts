@@ -31,6 +31,7 @@ import { BannersModule } from "./modules/banners/banners.module"
 import { ReceiptModule } from "./modules/receipt/receipt.module"
 import { EmailBroadcastModule } from "./modules/email-broadcast/email-broadcast.module"
 import { YatraModule } from "./modules/yatra/yatra.module"
+import { AnalyticsModule } from "./modules/analytics/analytics.module"
 
 @Module({
   imports: [
@@ -76,6 +77,7 @@ import { YatraModule } from "./modules/yatra/yatra.module"
     EmailBroadcastModule,
     PaymentModule,
     YatraModule,
+    AnalyticsModule,
   ],
   providers: [
     {

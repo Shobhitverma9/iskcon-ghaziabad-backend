@@ -7,6 +7,7 @@ import {
     Logger,
     RawBodyRequest,
     Req,
+    Ip,
 } from '@nestjs/common'
 import { PaymentService } from './payment.service'
 import { DonationService } from '../donation/donation.service'
@@ -14,6 +15,7 @@ import { PoojaService } from '../pooja/pooja.service'
 import { ReceiptService } from '../receipt/receipt.service'
 import { NotificationService } from '../notification/notification.service'
 import { YatraService } from '../yatra/yatra.service'
+import { AnalyticsService } from '../analytics/analytics.service'
 import { ConfigService } from '@nestjs/config'
 import {
     CreateOrderDto,
@@ -35,6 +37,7 @@ export class PaymentController {
         private readonly receiptService: ReceiptService,
         private readonly notificationService: NotificationService,
         private readonly yatraService: YatraService,
+        private readonly analyticsService: AnalyticsService,
     ) { }
 
 
@@ -121,7 +124,11 @@ export class PaymentController {
      * Verify payment and update donation status
      */
     @Post('verify')
-    async verifyPayment(@Body() verifyPaymentDto: VerifyPaymentDto) {
+    async verifyPayment(
+        @Body() verifyPaymentDto: VerifyPaymentDto,
+        @Ip() ip?: string,
+        @Headers('user-agent') userAgent?: string
+    ) {
         try {
             const isValid = this.paymentService.verifyPaymentSignature(verifyPaymentDto)
 
@@ -149,6 +156,26 @@ export class PaymentController {
                 } catch (receiptErr) {
                     // Log but don't fail the payment verification — payment was captured successfully
                     this.logger.error(`Failed to generate receipt for donation ${verifyPaymentDto.donationId}`, receiptErr)
+                }
+
+                // Server-Side Tracking (Meta CAPI)
+                try {
+                    const donation = await this.donationService.findById(verifyPaymentDto.donationId);
+                    if (donation) {
+                        await this.analyticsService.trackPurchase(
+                            donation.amount,
+                            verifyPaymentDto.razorpayPaymentId || verifyPaymentDto.donationId, // Event ID for deduplication
+                            {
+                                email: donation.donorEmail,
+                                phone: donation.donorPhone,
+                                clientIpAddress: ip,
+                                clientUserAgent: userAgent
+                            },
+                            (donation as any).category || 'Temple Donation'
+                        );
+                    }
+                } catch (metaErr) {
+                    this.logger.error(`Failed to send Server-Side tracking for ${verifyPaymentDto.donationId}`, metaErr);
                 }
             } else if (verifyPaymentDto.poojaId) {
                 // Update pooja booking with Razorpay details
@@ -214,6 +241,21 @@ export class PaymentController {
                     this.logger.log(`✅ Receipt generated for initial subscription payment ${donation._id}`);
                 } catch (receiptError) {
                     this.logger.error(`Failed to generate receipt for initial subscription payment`, receiptError);
+                }
+
+                // Server-Side Tracking (Meta CAPI)
+                try {
+                    await this.analyticsService.trackPurchase(
+                        donation.amount,
+                        verifyDto.razorpayPaymentId || donation._id.toString(), // Event ID for deduplication
+                        {
+                            email: donation.donorEmail,
+                            phone: donation.donorPhone,
+                        },
+                        `Subscription: ${(donation as any).category || 'Temple Donation'}`
+                    );
+                } catch (metaErr) {
+                    this.logger.error(`Failed to send Server-Side tracking for subscription payment ${donation._id}`, metaErr);
                 }
             }
 

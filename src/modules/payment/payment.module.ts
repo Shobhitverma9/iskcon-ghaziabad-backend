@@ -9,6 +9,7 @@ import { ReceiptModule } from '../receipt/receipt.module'
 import { NotificationModule } from '../notification/notification.module'
 import { YatraModule } from '../yatra/yatra.module'
 import { PaymentCronService } from './payment-cron.service'
+import { AnalyticsModule } from '../analytics/analytics.module'
 
 @Module({
     imports: [
@@ -18,6 +19,7 @@ import { PaymentCronService } from './payment-cron.service'
         ReceiptModule, // Import to access ReceiptService
         NotificationModule,
         forwardRef(() => YatraModule),
+        AnalyticsModule,
     ],
     controllers: [PaymentController],
     providers: [PaymentService, PaymentCronService],
