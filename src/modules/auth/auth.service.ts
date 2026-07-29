@@ -232,6 +232,9 @@ export class AuthService {
             { lastLogin: new Date(), loginAttempts: 0, updatedAt: new Date() }
         );
 
+        // Link any past guest donations/subscriptions
+        await this.linkGuestDonations(user);
+
         // Remove password from response
         const userObject = user.toObject();
         delete userObject.password;
