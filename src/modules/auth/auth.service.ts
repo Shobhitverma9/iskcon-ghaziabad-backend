@@ -297,6 +297,12 @@ export class AuthService {
         };
     }
 
+    private async linkGuestDonations(user: UserDocument) {
+        // TODO: Implement linking of guest donations to the newly registered/logged-in user
+        // This requires injecting Donation/Subscription models and updating records matching the user's email.
+        this.logger.debug(`[Stub] linkGuestDonations called for user ${user.email}`);
+    }
+
     async logout(token: string) {
         if (!token) {
             this.logger.log('No session token provided for logout. Proceeding as successful.');
