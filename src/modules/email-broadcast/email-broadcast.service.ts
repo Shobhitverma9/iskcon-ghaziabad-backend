@@ -89,8 +89,9 @@ export class EmailBroadcastService {
         const i = chunkIndex++;
         const chunk = taskChunks[i];
         try {
-          await this.notificationService.sendBroadcastBatch(chunk, template.subject, template.htmlBody);
-          successCount += chunk.length;
+          const result = await this.notificationService.sendBroadcastBatch(chunk, template.subject, template.htmlBody);
+          successCount += result.successCount;
+          failureCount += result.errorCount;
         } catch (error) {
           this.logger.error(`Failed to send broadcast batch at chunk ${i}`, error);
           failureCount += chunk.length;

@@ -109,7 +109,7 @@ export class NotificationService {
         }
     }
 
-    async sendBroadcastBatch(recipients: string[], subject: string, htmlBody: string): Promise<void> {
+    async sendBroadcastBatch(recipients: string[], subject: string, htmlBody: string): Promise<{ successCount: number, errorCount: number }> {
         const transactionalToken = this.configService.get<string>('POSTMARK_API_TOKEN')?.trim();
         const broadcastToken = this.configService.get<string>('POSTMARK_BROADCAST_TOKEN')?.trim() || transactionalToken;
         
@@ -154,6 +154,8 @@ export class NotificationService {
             if (errorCount > 0) {
                 this.logger.error(`Postmark Batch Errors: ${JSON.stringify(results.filter(r => r.ErrorCode !== 0).slice(0, 3), null, 2)}`);
             }
+            
+            return { successCount, errorCount };
         } catch (error) {
             this.logger.error(`Failed to send broadcast batch via /email/batch API`, error.response?.data || error.message);
             throw error;
