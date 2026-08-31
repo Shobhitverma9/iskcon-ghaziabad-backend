@@ -128,21 +128,15 @@ export class DonationService {
         this.logger.log(`🚀 Triggering receipt service for manual donation ${savedDonation._id}...`);
         if (savedDonation.receiptNumber) {
           this.logger.log(`🔄 Using existing receipt number: ${savedDonation.receiptNumber}`);
-          this.receiptService.resendReceipt(savedDonation._id.toString()).then(() => {
-            this.logger.log(`✅ Manual receipt resend successful for ${savedDonation._id}`);
-          }).catch(err =>
-            this.logger.error(`❌ Manual receipt processing failed for ${savedDonation._id}: ${err.message}`)
-          );
+          await this.receiptService.resendReceipt(savedDonation._id.toString());
+          this.logger.log(`✅ Manual receipt resend successful for ${savedDonation._id}`);
         } else {
           this.logger.log(`🆕 Generating new receipt for ${savedDonation._id}`);
-          this.receiptService.generateAndSendReceipt(savedDonation._id.toString()).then(() => {
-            this.logger.log(`✅ Manual receipt generation successful for ${savedDonation._id}`);
-          }).catch(err =>
-            this.logger.error(`❌ Manual receipt generation failed for ${savedDonation._id}: ${err.message}`)
-          );
+          await this.receiptService.generateAndSendReceipt(savedDonation._id.toString());
+          this.logger.log(`✅ Manual receipt generation successful for ${savedDonation._id}`);
         }
       } catch (error) {
-        this.logger.error(`❌ Failed to trigger receipt service: ${error.message}`);
+        this.logger.error(`❌ Failed to process manual receipt for ${savedDonation._id}: ${error.message}`);
       }
     }
 
