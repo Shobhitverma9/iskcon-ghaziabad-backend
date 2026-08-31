@@ -282,6 +282,7 @@ export class NotificationService {
             };
 
             this.logger.log(`Sending WhatsApp receipt to: ${cleanPhone}, URL: ${receiptUrl}`);
+            this.logger.log(`[DEBUG] WhatsApp Payload: ${JSON.stringify(payload)}`);
 
             const response = await axios.post(this.timespanelBaseUrl, payload, {
                 headers: {
