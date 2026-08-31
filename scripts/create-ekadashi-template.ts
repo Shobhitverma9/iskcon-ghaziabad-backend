@@ -13,7 +13,7 @@ async function createTemplate() {
   const htmlBody = `
     <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; overflow: hidden; background-color: #fff;">
         <div style="background-color: #f7941d; padding: 0; text-align: center;">
-            <img src="https://res.cloudinary.com/ddcfe7ux2/image/upload/v1774625822/kamada-ekadashi-2026.jpg" alt="Kamada Ekadashi" style="width: 100%; max-width: 600px; display: block;">
+            <img src="https://res.cloudinary.com/vwbtuavq/image/upload/v1774625822/kamada-ekadashi-2026.jpg" alt="Kamada Ekadashi" style="width: 100%; max-width: 600px; display: block;">
         </div>
         
         <div style="padding: 30px; line-height: 1.6; color: #333;">
@@ -71,3 +71,4 @@ async function createTemplate() {
 }
 
 createTemplate();
+

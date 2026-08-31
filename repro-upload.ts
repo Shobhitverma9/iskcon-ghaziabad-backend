@@ -7,7 +7,7 @@ import * as path from 'path';
 
 async function testUpload() {
     const configService = new ConfigService({
-        CLOUDINARY_CLOUD_NAME: 'ddcfe7ux2',
+        CLOUDINARY_CLOUD_NAME: 'vwbtuavq',
         CLOUDINARY_API_KEY: '886133274712621',
         CLOUDINARY_API_SECRET: 'UL0NOTNB5vLKTP83iJuFYGaZaNw',
     });
@@ -38,3 +38,4 @@ async function testUpload() {
 }
 
 testUpload();
+

@@ -99,14 +99,21 @@ export class DonationService {
   async createManual(createDonationDto: CreateDonationDto, userId: string): Promise<Donation> {
     this.logger.log(`📝 Creating manual donation for ${createDonationDto.donorName} (${createDonationDto.amount} Rs)`);
     
-    const donation = new this.donationModel({
+    const donationData: any = {
       ...createDonationDto,
       userId: createDonationDto.userId || userId,
       status: createDonationDto.status || 'completed',
       paymentMethod: 'manual',
-      paymentMode: createDonationDto.paymentMode || 'Cash', // Default to Cash for manual if not specified
+      paymentMode: createDonationDto.paymentMode || 'Cash',
       transactionId: createDonationDto.transactionId || `MANUAL-${Date.now()}`
-    })
+    };
+
+    const donation = new this.donationModel(donationData)
+    
+    // Explicitly set to undefined if it's an empty string to avoid MongoDB sparse index duplicate key error
+    if (donation.receiptNumber === "" || !donation.receiptNumber) {
+        donation.receiptNumber = undefined;
+    }
 
     if (createDonationDto.createdAt) {
       donation.createdAt = new Date(createDonationDto.createdAt);

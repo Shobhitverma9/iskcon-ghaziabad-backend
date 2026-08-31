@@ -15,7 +15,7 @@ async function bootstrap() {
             title: "Guardian of Temple",
             slug: "guardian-of-temple",
             description: "Become a Guardian of the Temple by contributing just ₹1 per day. Your support helps maintain the sacred temple, support daily worship, and preserve our spiritual heritage.",
-            image: "https://res.cloudinary.com/ddcfe7ux2/image/upload/v1773670902/banners/1773670898598-254574481.webp",
+            image: "https://res.cloudinary.com/vwbtuavq/image/upload/v1773670902/banners/1773670898598-254574481.webp",
             order: 4,
             isActive: true,
         }
@@ -59,7 +59,7 @@ async function bootstrap() {
                 category: category._id,
                 subCategory: "Temple Maintenance",
                 description: "Support daily temple operations and maintenance",
-                image: "https://res.cloudinary.com/ddcfe7ux2/image/upload/v1773670902/banners/1773670898598-254574481.webp",
+                image: "https://res.cloudinary.com/vwbtuavq/image/upload/v1773670902/banners/1773670898598-254574481.webp",
                 isActive: true
             })
             console.log(`Created Item: ${item.title}`)
@@ -80,7 +80,7 @@ async function bootstrap() {
                 category: category._id,
                 subCategory: "Deity Services",
                 description: "Support daily worship and deity services",
-                image: "https://res.cloudinary.com/ddcfe7ux2/image/upload/v1773670902/banners/1773670898598-254574481.webp",
+                image: "https://res.cloudinary.com/vwbtuavq/image/upload/v1773670902/banners/1773670898598-254574481.webp",
                 isActive: true
             })
             console.log(`Created Item: ${item.title}`)
@@ -101,7 +101,7 @@ async function bootstrap() {
                 category: category._id,
                 subCategory: "Infrastructure Development",
                 description: "Support temple infrastructure and development",
-                image: "https://res.cloudinary.com/ddcfe7ux2/image/upload/v1773725687/banners/1773725682594-458327008.webp",
+                image: "https://res.cloudinary.com/vwbtuavq/image/upload/v1773725687/banners/1773725682594-458327008.webp",
                 isActive: true
             })
             console.log(`Created Item: ${item.title}`)
@@ -117,3 +117,4 @@ async function bootstrap() {
 }
 
 bootstrap()
+

@@ -259,6 +259,11 @@ export class ReceiptService implements OnModuleDestroy { // Implemented OnModule
         html = html.replace(/\{\{\s*paymentMethodText\s*\}\}/g, this.getPaymentMethodText(receiptData.paymentMethod))
         html = html.replace(/\{\{\s*transactionDetails\s*\}\}/g, receiptData.transactionDetails)
 
+        // Add 80G Registration Number if PAN is provided
+        const eightyGHtml = (receiptData.panNo && receiptData.panNo !== 'N/A' && receiptData.panNo.trim() !== '')
+            ? `<p style="color: #EB248F; text-align: center; font-family: 'Helvetica', sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 10px; margin-top: 5px;">80G Registration No: AAATI0017P27MB02</p>`
+            : '';
+        html = html.replace(/\{\{\s*eightyG\s*\}\}/g, eightyGHtml)
         // Convert external S3 images to offline Base64 to prevent Page.printToPDF timeouts
         try {
             const publicPath = path.resolve(process.cwd(), 'public/images')
@@ -483,7 +488,8 @@ ISKCON Ghaziabad Team
                     _id: donationId, 
                     $or: [
                         { receiptNumber: { $exists: false } },
-                        { receiptNumber: null }
+                        { receiptNumber: null },
+                        { receiptNumber: "" }
                     ]
                 },
                 { receiptNumber: receiptNumber },

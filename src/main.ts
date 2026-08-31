@@ -9,7 +9,17 @@ import { HttpAdapterHost } from '@nestjs/core';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule)
+  if (process.env.NODE_ENV === 'production') {
+    console.log = () => {};
+    console.info = () => {};
+    console.warn = () => {};
+    console.error = () => {};
+    console.debug = () => {};
+  }
+
+  const app = await NestFactory.create(AppModule, {
+    logger: process.env.NODE_ENV === 'production' ? false : ['log', 'error', 'warn', 'debug', 'verbose'],
+  })
 
   // Support comma-separated list of allowed origins, e.g.:
   // CORS_ORIGIN=https://iskconghaziabad.com,https://www.iskconghaziabad.com
