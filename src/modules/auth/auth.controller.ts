@@ -48,6 +48,20 @@ export class AuthController {
         return this.authService.resendOtp(body.email);
     }
 
+    @Post('forgot-password')
+    @HttpCode(HttpStatus.OK)
+    async forgotPassword(@Body() body: { email: string }) {
+        this.logger.log(`Forgot password request for: ${body.email}`);
+        return this.authService.forgotPassword(body.email);
+    }
+
+    @Post('reset-password')
+    @HttpCode(HttpStatus.OK)
+    async resetPassword(@Body() body: { email: string; otp: string; newPassword: string }) {
+        this.logger.log(`Reset password request for: ${body.email}`);
+        return this.authService.resetPassword(body.email, body.otp, body.newPassword);
+    }
+
     @Post('google-login')
     @HttpCode(HttpStatus.OK)
     async googleLogin(

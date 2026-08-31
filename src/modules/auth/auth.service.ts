@@ -131,6 +131,56 @@ export class AuthService {
         return { message: 'OTP resent successfully' };
     }
 
+    async forgotPassword(email: string) {
+        const user = await this.userModel.findOne({ email: email.toLowerCase() });
+        if (!user) {
+            // For security, don't reveal if user exists, just return success
+            return { message: 'If the email exists, an OTP has been sent.' };
+        }
+
+        const otp = this.otpService.generateOtp();
+        const otpExpiresAt = new Date();
+        otpExpiresAt.setMinutes(otpExpiresAt.getMinutes() + 10); // 10 mins expiry
+
+        user.otp = otp;
+        user.otpExpiresAt = otpExpiresAt;
+        await user.save();
+
+        // Send OTP for password reset
+        await this.otpService.sendOtp(user.email, user.phone, otp);
+
+        this.logger.log(`Forgot Password: OTP sent to ${user.email}`);
+
+        return { message: 'If the email exists, an OTP has been sent.' };
+    }
+
+    async resetPassword(email: string, otp: string, newPassword: string) {
+        const user = await this.userModel.findOne({ email: email.toLowerCase() });
+        if (!user) {
+            throw new NotFoundException('User not found');
+        }
+
+        if (user.otp !== otp) {
+            throw new BadRequestException('Invalid OTP');
+        }
+
+        if (user.otpExpiresAt && user.otpExpiresAt < new Date()) {
+            throw new BadRequestException('OTP expired');
+        }
+
+        // Hash new password
+        const hashedPassword = await this.hashPassword(newPassword);
+
+        user.password = hashedPassword;
+        user.otp = undefined; // Clear OTP
+        user.otpExpiresAt = undefined;
+        await user.save();
+
+        this.logger.log(`Password reset successful for ${user.email}`);
+
+        return { message: 'Password reset successful. You can now log in with your new password.' };
+    }
+
     async googleLogin(token: string, ipAddress?: string, userAgent?: string) {
         try {
             const ticket = await this.googleClient.verifyIdToken({
@@ -232,6 +282,9 @@ export class AuthService {
             { lastLogin: new Date(), loginAttempts: 0, updatedAt: new Date() }
         );
 
+        // Link any past guest donations/subscriptions
+        await this.linkGuestDonations(user);
+
         // Remove password from response
         const userObject = user.toObject();
         delete userObject.password;
@@ -242,6 +295,12 @@ export class AuthService {
             user: userObject,
             token,
         };
+    }
+
+    private async linkGuestDonations(user: UserDocument) {
+        // TODO: Implement linking of guest donations to the newly registered/logged-in user
+        // This requires injecting Donation/Subscription models and updating records matching the user's email.
+        this.logger.debug(`[Stub] linkGuestDonations called for user ${user.email}`);
     }
 
     async logout(token: string) {
