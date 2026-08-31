@@ -4,7 +4,7 @@ async function testWa() {
     const timespanelApiKey = 'dfd7f23906c83fe01e86b4befe180acdbc03dea0769cee3717';
     const timespanelBaseUrl = 'https://asyncmsg.integration.timespanel.in/wa/v1/messages/send';
     const timespanelSenderNumber = '919217640062';
-    const to = '918588910062'; // Admin number as test
+    const to = '917011147999'; // User number
     const receiptUrl = 'https://res.cloudinary.com/demo/image/upload/v1570979139/receipts/receipt.pdf';
     
     const payload = {

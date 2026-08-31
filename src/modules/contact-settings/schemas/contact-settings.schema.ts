@@ -24,7 +24,7 @@ export class ContactSettings {
     @Prop({ default: "+91 85889 10062" })
     phone1: string
 
-    @Prop({ default: "+91 81309 92863" })
+    @Prop({ default: "+91 92176 40062" })
     phone2: string
 
     @Prop({ default: "4:30 AM - 1:00 PM" })

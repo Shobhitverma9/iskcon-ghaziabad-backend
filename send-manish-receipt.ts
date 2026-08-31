@@ -60,6 +60,7 @@ async function bootstrap() {
             // Reload donation to get the generated receipt number
             const updatedDonation = await donationModel.findById(donation._id);
             const receiptNumber = updatedDonation?.receiptNumber || "GENERATED";
+            console.log(`[DEBUG] Receipt URL: ${updatedDonation?.receiptUrl}`);
 
             console.log(`✨ SUCCESS: Receipt ${receiptNumber} generated and sent to donor WhatsApp (${DONOR_DETAILS.donorPhone})!`);
 

@@ -231,7 +231,7 @@ export class NotificationService {
         }
 
         try {
-            const messageId = `MSG-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`;
+            const messageId = `MSG-${Date.now()}`;
 
             // Extract first name
             const firstName = donorName.split(' ')[0] || donorName;
